@@ -96,7 +96,7 @@ function finishedLoading(bufferList) {
     oscillator.frequency.value = 400;
     var gainNode = audioCtx.createGain();
     oscillator.connect(gainNode);
-    gainNode.connect(merger,0,1);
+    gainNode.connect(merger,0,0);
     //oscillator.connect(context.destination);
     oscillator.start(0);
     gainNode.gain.value = 0.5;
