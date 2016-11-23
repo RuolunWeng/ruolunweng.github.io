@@ -73,34 +73,7 @@ function finishedLoading(bufferList) {
 
 }
 
-
-//create a sinus from web audio api
-    var oscillator = audioCtx.createOscillator();
-    oscillator.frequency.value = 400;
-    var gainNode = audioCtx.createGain();
-    oscillator.connect(gainNode);
-    //gainNode.connect(merger,0,1);
-    //oscillator.connect(context.destination);
-    oscillator.start(0);
-    gainNode.gain.value = 0.1;
-
-
-if (navigator.getUserMedia) {
-   console.log('getUserMedia supported.');
-   navigator.getUserMedia (
-      // constraints - only audio needed for this app
-      {
-         audio: true
-      },
-
-      // Success callback
-      function(stream) {
-         source = audioCtx.createMediaStreamSource(stream);
-         //source.connect(dsp.getProcessor());
-          //source.connect(convolverL1);
-         //source.connect(convolverR1);
-
-         // Set faust decoder signals to convolters
+// Set faust decoder signals to convolters
           dsp.connect(spilter);
           console.log(spilter);
         
@@ -118,16 +91,17 @@ if (navigator.getUserMedia) {
          merger.connect(audioCtx.destination);
          console.log(merger);
          console.log(audioCtx.destination);
-      },
 
-      // Error callback
-      function(err) {
-         alert('The following gUM error occured: ' + err);
-      }
-   );
-} else {
-   alert('getUserMedia not supported on your browser!');
-}
+//create a sinus from web audio api
+    var oscillator = audioCtx.createOscillator();
+    oscillator.frequency.value = 400;
+    var gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    //gainNode.connect(merger,0,1);
+    //oscillator.connect(context.destination);
+    oscillator.start(0);
+    gainNode.gain.value = 0.1;
+
 
 
 function convChange() {
