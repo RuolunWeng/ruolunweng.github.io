@@ -21,6 +21,20 @@
     <input type="range" min="0" max="6.28" value="0" id="azimuth" step="0.001" oninput="faustParametre.azimuth(this)">
     <label id="azimuthOut">Azimuth</label>
 
+    <script type="text/javascript">
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    var audioCtx = new AudioContext();
+    window.addEventListener('touchstart', function() {
+    // create empty buffer
+    var buffer = audioCtx.createBuffer(1, 1, 44100);
+    var source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    // connect to output 
+    source.connect(audioCtx.destination);
+    // play the file
+    source.noteOn(0);
+    }, false);
+    </script>
     <script src="../js/binaural_noise_test_1.js"></script>
     <script src="../js/buffer-loader.js"></script>
     <script src="../js/convmac5.js"></script>
