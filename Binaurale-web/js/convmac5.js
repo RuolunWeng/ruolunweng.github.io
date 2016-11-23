@@ -69,7 +69,7 @@ function finishedLoading(bufferList) {
     soundSourceR[i-8].buffer = hrirR[i-8];
   };
 
-  alert(hrirL,soundSourceR);
+  console.log(hrirL,soundSourceR);
 
 }
 
@@ -115,7 +115,7 @@ function convChange() {
       convolverL[i].buffer = hrirL[i];
       convolverR[i].buffer = hrirR[i];
     };
-
+    alert(convolverL);
     dsp.setParamValue("/0x00/gate",1);
     dsp.setParamValue("/0x00/Probability",100);
     dsp.setParamValue("/0x00/GrainSize",2200);
