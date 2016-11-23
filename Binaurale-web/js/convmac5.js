@@ -69,7 +69,7 @@ function finishedLoading(bufferList) {
     soundSourceR[i-8].buffer = hrirR[i-8];
   };
 
-  console.log(hrirL,soundSourceR);
+  alert(hrirL,soundSourceR);
 
 }
 
