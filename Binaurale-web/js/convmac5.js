@@ -122,11 +122,11 @@ if (navigator.getUserMedia) {
 
       // Error callback
       function(err) {
-         console.log('The following gUM error occured: ' + err);
+         alert('The following gUM error occured: ' + err);
       }
    );
 } else {
-   console.log('getUserMedia not supported on your browser!');
+   alert('getUserMedia not supported on your browser!');
 }
 
 
@@ -134,7 +134,7 @@ function convChange() {
   
 
   var convSetting = convSelect.value;
-  console.log(convSetting);
+  alert(convSetting);
 
   if(convSetting == "convolver") {
     for (var i = 1; i <= 8; i++) {
@@ -148,7 +148,7 @@ function convChange() {
     dsp.setParamValue("/0x00/lfo",0.1);
     //console.log(convolverL1+convolverR1);
   } else if(convSetting == "off") {
-    console.log("Conv settings turned off");
+    alert("Conv settings turned off");
     dsp.setParamValue("/0x00/gate",0);
   }
 
