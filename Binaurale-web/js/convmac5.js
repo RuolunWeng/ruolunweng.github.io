@@ -89,7 +89,7 @@ function finishedLoading(bufferList) {
          gainNodeL.connect(merger,0,0);
          gainNodeR.connect(merger,0,1);
          merger.connect(audioCtx.destination);
-         alert(merger,spilter);
+         alert(spilter);
          console.log(audioCtx.destination);
 
 //create a sinus from web audio api
