@@ -89,7 +89,7 @@ function finishedLoading(bufferList) {
          gainNodeL.connect(merger,0,0);
          gainNodeR.connect(merger,0,1);
          merger.connect(audioCtx.destination);
-         console.log(merger);
+         alert(merger,spilter);
          console.log(audioCtx.destination);
 
 //create a sinus from web audio api
@@ -115,7 +115,7 @@ function convChange() {
       convolverL[i].buffer = hrirL[i];
       convolverR[i].buffer = hrirR[i];
     };
-    alert(convolverL);
+    //alert(convolverL);
     dsp.setParamValue("/0x00/gate",1);
     dsp.setParamValue("/0x00/Probability",100);
     dsp.setParamValue("/0x00/GrainSize",2200);
