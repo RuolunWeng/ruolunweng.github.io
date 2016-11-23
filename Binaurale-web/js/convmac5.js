@@ -6,7 +6,7 @@ var mute = document.getElementById("mute");
 
 // create FAUST web audio api context
 	
-  var dsp = faust.binaural_noise_test(audioCtx, 8192);
+  var dsp = faust.binaural_noise_test(audioCtx, 4096);
   console.log(dsp.getProcessor());
   console.log(dsp.json());
   var convolverL = [], convolverR = [];
