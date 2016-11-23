@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>FAUST WEB</title>
+</head>
+
+<body>
+    <h1>
+ 		WEB AUDIO API CONVOLVER
+    </h1>
+    <p>
+        convolution test...
+    </p>
+    <select id="conv" name="conv">
+          <option value="convolver">Convolution</option>
+          <option value="off" selected>Off</option>
+    </select>
+    <button id="mute">Mute</button>
+    <input type="range" min="0" max="1.5" value="0.1" id="lfo" step="0.01" oninput="faustParametre.lfo(this)">
+    <label id="lfoOut">LFO</label>
+
+    <script src="../js/binaural_noise_test_2.js"></script>
+    <script src="../js/convmac4.js"></script>
+
+
+</body>
+
+</html>

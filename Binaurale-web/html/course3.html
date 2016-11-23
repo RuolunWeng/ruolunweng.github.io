@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>FAUST WEB</title>
+</head>
+
+<body>
+    <h1>
+ 		WEB AUDIO API CONVOLVER
+    </h1>
+    <p>
+        convolution test...
+    </p>
+    <select id="conv" name="conv">
+          <option value="convolver">Convolution</option>
+          <option value="off" selected>Off</option>
+    </select>
+    <button id="mute">Mute</button>
+    <input type="range" min="0" max="6.28" value="0" id="azimuth" step="0.001" oninput="faustParametre.azimuth(this)">
+    <label id="azimuthOut">Azimuth</label>
+
+    <script src="../js/binaural_noise_test_1.js"></script>
+    <script src="../js/convmac3.js"></script>
+
+
+</body>
+
+</html>
