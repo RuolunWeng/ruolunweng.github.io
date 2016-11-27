@@ -1,5 +1,5 @@
 # ruolunweng.github.io
 
-FASUT WEB API TEST
+FAUST WEB API TEST
 
 MAKE FOR FUN SERIOUSLY
