@@ -148,7 +148,7 @@ function convChange() {
     dsp.setParamValue("/0x00/gate",1);
     dsp.setParamValue("/0x00/Probability",100);
     dsp.setParamValue("/0x00/GrainSize",2000);
-    dsp.setParamValue("/0x00/lfo",0.5);
+    dsp.setParamValue("/0x00/lfo",0.1);
     dsp.setParamValue("/0x00/elevation0",0);
     //dsp.setParamValue("/0x00/distance",5);
     //console.log(convolverL1+convolverR1);
