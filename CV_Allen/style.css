@@ -1,0 +1,98 @@
+body 
+{
+
+   background-color:#BBB; 
+   font-size: 12px;
+   font-family: times; 
+  
+}
+
+
+.texte 
+{
+	background-color:rgba(0, 255, 0, 0.21);
+   font-family: 'PT Sans', sans-serif;
+   font-size: 0.9rem; 
+   padding: 5px;
+
+}
+
+h1
+{
+   text-decoration: underline;
+   font-size: 18px;
+   text-align: center;
+}
+
+h2
+{
+   font-size: 25px;
+}
+.article
+{
+	background-color:#B0B;
+}
+
+#m1,#m3,#m4,#m5,#m6,#m7,#m8 
+{
+
+	background-color:rgba(32, 22, 14, 0.31);
+   margin: 10px;
+   padding: 20px;
+
+}
+
+#m2
+{
+   background-color:rgba(32, 22, 14, 0.31);
+   display: block;
+   width: 100%;
+   padding: 1px;
+}
+
+.welcome 
+{
+   position: fixed;
+   top: 0vh;   
+   font-family: 'Delius Unicase', cursive;
+   font-size: 10pt;
+   color: rgba(255, 255, 0, 0.91);
+
+}
+
+
+section
+{
+   display: flex;
+   max-width: 800px;
+   margin: auto;
+}
+
+header
+{
+   font-family: 'cwTeXMing', serif;
+   font-size: 40pt;
+   text-shadow: 5px 5px 10px #00FF00;
+   margin-top: 30px;
+}
+
+content
+{
+   width: 600px;
+   flex-grow: 1;
+}
+
+
+div img
+{
+   display: block;
+   width: 100%;
+}
+
+content video 
+{
+  width: 100%;
+}
+
+
+
