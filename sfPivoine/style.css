@@ -1,7 +1,7 @@
 .header
 {
 	background: url(images/bg2.jpg) no-repeat 50% -20% ;
-	padding: 150px 0px 100px;
+	padding: 300px 0px 0px;
 
 }
 a
@@ -54,7 +54,7 @@ a
 }
 .main-title
 {
-	padding: 120px 0px 0px;
+	padding: 50px 0px 0px;
 }
 .main-title h2
 {
@@ -69,7 +69,7 @@ a
 	font-family: 'Roboto Slab', serif;
 	color: #33383e;
 	font-size: 20px;
-	padding: 10px 0px;
+	padding: 20px 0px;
 	width: 80%;
 	margin: 0 auto !important;
 	font-weight: 300;
