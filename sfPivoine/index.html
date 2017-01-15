@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>About sfPivoine</title>
+<link rel="stylesheet" type="text/css" href="style.css"/>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href='https://fonts.useso.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+<link href='https://fonts.useso.com/css?family=Lato:400,900,700,300,100' rel='stylesheet' type='text/css'>
+<link href='https://fonts.useso.com/css?family=Roboto+Slab:400,700,300,100' rel='stylesheet' type='text/css'>
+<script src="https://ajax.useso.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+</head>
+
+<body>
+<div class="header">
+	<div class="container">
+    	<div class="row">
+        	<div class="col-md-12 col-sm-12 col-xs-12">
+            	<div class="logo pull-left col-md-6 col-sm-6 col-xs-12">
+                	<h1>sfPivoine</h1>
+                </div>
+                
+            </div>
+            <div class="col-md-12 col-sm-12 col-xs-12">
+            	<div class="main-title text-center">
+                	<h2>Coming Soon</h2>
+                    <p>Application for my personal project of RIM in UJM,Saint-Etinenne,France</p>
+                    <div id="countdown" data-wow-delay=".3s" data-date="Mars 1, 2017 20:00:00"></div>
+                    <a href="#footer" class="subscribe-tag page-scroll">Download</a>
+                </div>
+                
+                	
+            </div>
+        </div>
+    </div>
+</div>
+<div class="about text-center">
+	<div class="container">
+    	<div class="row">
+        	<div class="col-md-12">
+            	<div class="title">
+                	<h3>About Us</h3>
+                </div>
+                <div class="desc">
+                	<p>sfPivoine is a musical application allowing everybody to be engaged in a participatory concert in which smartphone is the main musical instrument generating sound with gestures. This is a performance for Pipa, Smartphones and Live electronic music, which is inspired by an Chinese opera "The Peony Pavilion"(牡丹亭). </br>Everybody can get the feeling of being a part of performance and part of scenario.</p>
+                </div>
+            </div>
+            <div class="featurebox col-md-12 col-sm-12 col-xs-12">
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            	<div class="feature text-left">
+                	<h4>Our process</h4>
+                    <p></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            	<div class="feature text-left">
+                	<h4>Our Vision</h4>
+                    <p></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            	<div class="feature text-left">
+                	<h4>Our Approach</h4>
+                    <p></p>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            	<div class="feature text-left">
+                	<h4>Our Objective</h4>
+                    <p></p>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="footer" id="footer">
+	<div class="container">
+    	<div class="row">
+        	<div class="col-md-12">
+        	<div class="footer-title text-center">
+            	<h3>Download application NOW !!!</h3>
+                <p>Available in App Store and Google Play</p>
+            </div>
+             </div>
+             <div class="col-md-12 text-center footer-line">
+             	<p>Copyright &copy; 2017 Allen Weng All rights reserved.</p>
+             </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/jquery.countdown.min.js"></script>
+<script type="text/javascript">
+if ($('#countdown').length) { 
+			$('#countdown').countdown({
+				render: function(data) {
+					if (data.years >= 1) {
+						var $days =	(data.years*365)+data.days;
+					} else {
+						var $days = data.days;
+					}
+				  $(this.el).html(
+					  '<div class="day">' + this.leadingZeros($days) + ' <span>Days</span></div>'+
+					  '<div class="hour">' + this.leadingZeros(data.hours, 2) + ' <span>Hours</span></div>'+
+					  '<div class="min">' + this.leadingZeros(data.min, 2) + ' <span>Minutes</span></div>'+
+					  '<div class="sec">' + this.leadingZeros(data.sec, 2) + ' <span>Seconds</span></div>'
+				  );
+				}
+			});
+		}
+
+</script>
+</body>
+</html>
