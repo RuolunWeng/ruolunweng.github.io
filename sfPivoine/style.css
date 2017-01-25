@@ -20,6 +20,7 @@ a
 	padding-left: 0px;
 	
 }
+
 .social img
 {
 	padding: 15px 30px 0px 30px; 
@@ -34,7 +35,7 @@ a
 {
 	text-decoration: none;
 }
-.social ul li a i
+.social ul li a i 
 {
 	text-align: center;
 	color: #fff;
