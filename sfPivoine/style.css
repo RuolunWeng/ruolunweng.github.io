@@ -95,8 +95,9 @@ a
 #countdown {
     text-align: center;
     margin-top: 20px;
-    
 }
+
+
 #countdown > div {
     width: 14%;
     margin: 0px 1%;
