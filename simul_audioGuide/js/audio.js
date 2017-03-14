@@ -6,7 +6,7 @@ var themeSelect = document.getElementById("theme");
 // create web audio api context
 	var AudioContext = window.AudioContext || window.webkitAudioContext;
 	var audioContext = new AudioContext();
-  var dsp = faust.aigue(audioContext, 256);
+  //var dsp = faust.aigue(audioContext, 256);
 
 // create player
 
