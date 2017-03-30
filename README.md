@@ -1,5 +1,16 @@
 # ruolunweng.github.io
 
-ALLEN'S PERSENAL SITE AND WEB TEST 
+
+
+==================================
+
+ALLEN'S PERSONAL SITE for WEB TEST 
+
 ============================
+
 ---MAKE FOR FUN SERIOUSLY---
+
+
+_ /CV ===> Personal CV
+
+_ /sfPivoine ===> Personal project "Pivoine"
