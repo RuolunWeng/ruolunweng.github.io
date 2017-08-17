@@ -415,8 +415,8 @@ function compileDSP()
     var argv = [];
     argv.push("-ftz");
     argv.push(ftz_flag);
-    argv.push("-I");
-    argv.push(libraries_url);
+    //argv.push("-I");
+    //argv.push(libraries_url);
 
     console.log(argv);
 

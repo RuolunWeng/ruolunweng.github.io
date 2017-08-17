@@ -14,7 +14,7 @@ var faust_svg = null;
 var poly_flag = "OFF";
 var poly_nvoices = 16;
 var output_handler = null;
-var libraries_url = "libraries/";
+var libraries_url = "https://ruolunweng.github.io/faustDynamicWeb/libraries/";
 
 
 // MIDI input handling
