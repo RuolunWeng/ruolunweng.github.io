@@ -1,4 +1,4 @@
-htt'use strict';
+'use strict';
 
 var isWebKitAudio = (typeof (webkitAudioContext) !== "undefined");
 var isWasm = (typeof (WebAssembly) !== "undefined");

@@ -14,7 +14,7 @@ var faust_svg = null;
 var poly_flag = "OFF";
 var poly_nvoices = 16;
 var output_handler = null;
-var libraries_url = "http://faust.grame.fr/modules/libraries/";
+var libraries_url = "libraries/";
 
 
 // MIDI input handling
@@ -305,7 +305,7 @@ function compileDSP()
         console.log("Poly DSP");
 
         // Create a poly DSP factory from the dsp code
-        factory = faust.createDSPFactory(dsp_code, ["-I", "https://ruolunweng.github.io/faustDynamicWeb/libraries/"]);
+        factory = faust.createDSPFactory(dsp_code, ["-I", libraries_url]);
 
         if (!factory) {
             alert(faust.getErrorMessage());
@@ -342,7 +342,7 @@ function compileDSP()
         console.log("Mono DSP");
 
         // Create a mono DSP factory from the dsp code
-        factory = faust.createDSPFactory(dsp_code, ["-I", "https://ruolunweng.github.io/faustDynamicWeb/libraries/"]);
+        factory = faust.createDSPFactory(dsp_code, ["-I", libraries_url]);
 
         if (!factory) {
             alert(faust.getErrorMessage());
