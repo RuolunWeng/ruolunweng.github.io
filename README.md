@@ -4,13 +4,13 @@
 
 ==================================
 
-ALLEN'S PERSONAL SITE for WEB TEST 
+ALLEN'S PERSONAL DEVELOPMENT SITE  
 
-============================
+==================================
 
----MAKE FOR FUN SERIOUSLY---
+---MAKE FUN SERIOUSLY---
 
 
-_ /CV ===> Personal CV
+_ /PW ===> Personal website
 
 _ /sfPivoine ===> Personal project "Pivoine"
