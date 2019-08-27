@@ -579,7 +579,7 @@ input[type=range]::-ms-track {
     position: absolute;
     top: 30%;
     width: 75%;
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: scroll;
     padding: 2rem 2rem;
     right: 0;
