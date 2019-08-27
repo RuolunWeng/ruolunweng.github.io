@@ -577,9 +577,9 @@ input[type=range]::-ms-track {
 
 .profile-info {
     position: absolute;
-    top: 35%;
+    top: 30%;
     width: 75%;
-    max-height: 400px;
+    max-height: 60%;
     overflow-y: scroll;
     padding: 2rem 2rem;
     right: 0;
