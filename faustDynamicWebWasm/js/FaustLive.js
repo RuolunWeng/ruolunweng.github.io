@@ -22,8 +22,7 @@ var poly_nvoices = 16;
 var output_handler = null;
 var save_state = true;
 //var libraries_url = "http://192.168.1.102:8000/libraries/"; //https://faust.grame.fr/doc/libraries/
-// var libraries_url = "https://ruolunweng.github.io/faustDynamicWebWasm/libraries/";
-var libraries_url = "https://faust.grame.fr/doc/libraries/";
+var libraries_url = "https://ruolunweng.github.io/faustDynamicWebWasm/libraries/";
 var module = null;
 
 
