@@ -272,7 +272,7 @@ function uploadFile(e)
 
 function displayContents(contents) {
   var element = document.getElementById('file-content');
-  element.textContent = contents;
+  //element.textContent = contents;
 }
 
 function uploadFileOn(e, callback)
@@ -601,11 +601,15 @@ function init()
     fileSelct.addEventListener("change",fileSelectHandler,false);
     $('.loadfile').on('click', function() { $('#file-input').click();return false;});
 
+    /*
     var filedrag1 = document.getElementById("filedrag");
     filedrag1.addEventListener("dragover", fileDragHover, false);
     filedrag1.addEventListener("dragleave", fileDragHover, false);
     filedrag1.addEventListener("drop", uploadFile, false);
     filedrag1.textContent = "Drop a Faust .dsp file or URL here (compiled using libfaust version " + faust.getLibFaustVersion() + ")";
+    */
+    var versionInfo = document.getElementById("versionInfo");
+    versionInfo.textContent = "Compiled using libfaust version " + faust.getLibFaustVersion();
 
     // Active AccelerometerHandler
     var accHandler = new AccelerometerHandler();
