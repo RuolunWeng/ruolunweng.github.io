@@ -105,7 +105,7 @@ sec2samp = *(ma.SR);
 //
 // * `l`: loudness in dB
 //-----------------------------
-db2linear(n) = pow(10, n/20.0);
+db2linear(l) = pow(10, l/20.0);
 
 
 //-------`(ba.)linear2db`----------
@@ -122,7 +122,7 @@ db2linear(n) = pow(10, n/20.0);
 //
 // * `g`: a linear gain
 //-----------------------------
-linear2db(n) = 20*log10(n);
+linear2db(g) = 20*log10(g);
 
 
 //----------`(ba.)lin2LogGain`------------------
@@ -131,10 +131,10 @@ linear2db(n) = 20*log10(n);
 // #### Usage
 //
 // ```
-// _ : lin2LogGain : _
+// lin2LogGain(n) : _
 // ```
 //---------------------------------------------
-lin2LogGain = _ <: _*_;
+lin2LogGain(n) = n*n;
 
 
 //----------`(ba.)log2LinGain`------------------
@@ -143,10 +143,10 @@ lin2LogGain = _ <: _*_;
 // #### Usage
 //
 // ```
-// _ : log2LinGain : _
+// log2LinGain(n) : _
 // ```
 //---------------------------------------------
-log2LinGain = sqrt;
+log2LinGain(n) = sqrt(n);
 
 // end GRAME section
 //########################################################################################
@@ -214,7 +214,7 @@ pole2tau(pole) = -1.0/(log(pole)*ma.SR);
 //
 // * `mk`: the MIDI key number
 //-----------------------------
-midikey2hz(mk) = 440.0*pow(2.0, (mk-69.0)/12);
+midikey2hz(mk) = 440.0*pow(2.0, (mk-69.0)/12.0);
 
 
 //-------`(ba.)hz2midikey`----------
@@ -231,7 +231,41 @@ midikey2hz(mk) = 440.0*pow(2.0, (mk-69.0)/12);
 //
 // * `f`: frequency in Hz
 //-----------------------------
-hz2midikey(f) = 12*ma.log2(f/440.0) + 69.0;
+hz2midikey(f) = 12.0*ma.log2(f/440.0) + 69.0;
+
+
+//-------`(ba.)semi2ratio`----------
+// Converts semitones in a frequency multiplicative ratio.
+// `semi2ratio` is a standard Faust function.
+//
+// #### Usage
+//
+// ```
+// semi2ratio(semi) : _
+// ```
+//
+// Where:
+//
+// * `semi`: semitone
+//-----------------------------
+semi2ratio(semi) = pow(2.0, semi/12.0);
+
+
+//-------`(ba.)ratio2semi`----------
+// Converts a frequency multiplicative ratio in semitones.
+// `ratio2semi` is a standard Faust function.
+//
+// #### Usage
+//
+// ```
+// ratio2semi(ratio) : _
+// ```
+//
+// Where:
+//
+// * `ratio`: a frequency multiplicative ratio
+//-----------------------------
+ratio2semi(ratio) = 12.0*log(ratio)/log(2.0);
 
 
 //-------`(ba.)pianokey2hz`----------
@@ -247,7 +281,7 @@ hz2midikey(f) = 12*ma.log2(f/440.0) + 69.0;
 //
 // * `pk`: the piano key number
 //-----------------------------
-pianokey2hz(pk) = 440.0*pow(2.0, (pk-49.0)/12);
+pianokey2hz(pk) = 440.0*pow(2.0, (pk-49.0)/12.0);
 
 
 //-------`(ba.)hz2pianokey`----------
@@ -263,7 +297,7 @@ pianokey2hz(pk) = 440.0*pow(2.0, (pk-49.0)/12);
 //
 // * `f`: frequency in Hz
 //-----------------------------
-hz2pianokey(f) = 12*ma.log2(f/440.0) + 49.0;
+hz2pianokey(f) = 12.0*ma.log2(f/440.0) + 49.0;
 
 // end jos section
 //########################################################################################
@@ -291,7 +325,7 @@ FAUST library file, GRAME section 2
 // * `n`: the starting point of the countdown
 // * `trig`: the trigger signal (1: start at `n`; 0: decrease until 0)
 //-----------------------------------------------------------------------------
-countdown(count, trig)	= \(c).(if(trig>0, count, max(0, c-1))) ~_;
+countdown(n, trig)	= \(c).(if(trig>0, n, max(0, c-1))) ~_;
 
 
 //----------------------------`(ba.)countup`--------------------------------
@@ -311,7 +345,7 @@ countdown(count, trig)	= \(c).(if(trig>0, count, max(0, c-1))) ~_;
 // * `n`: the maximum count value
 // * `trig`: the trigger signal (1: start at 0; 0: increase until `n`)
 //-----------------------------------------------------------------------------
-countup(count, trig) = \(c).(if(trig>0, 0, min(count, c+1))) ~_;
+countup(n, trig) = \(c).(if(trig>0, 0, min(n, c+1))) ~_;
 
 
 //--------------------`(ba.)sweep`--------------------------
@@ -340,7 +374,7 @@ sweep = %(int(*:max(1)))~+(1);
 // time : _
 // ```
 //------------------------
-time = (+(1)~_ ) - 1;
+time = (+(1)~_) - 1;
 
 
 //-------`(ba.)tempo`----------
@@ -460,7 +494,7 @@ beat(t) = pulse(tempo(t));
 // * `trig`: the trigger signal (1: start at next pulse; 0: reset to 0)
 //------------------------------------------------------------------------------
 //TODO: author "Vince"
-pulse_countup(t) =  + ~ _ * t;
+pulse_countup(trig) = + ~ _ * trig;
 
 
 //----------------------------`(ba.)pulse_countdown`---------------------------------
@@ -478,7 +512,7 @@ pulse_countup(t) =  + ~ _ * t;
 // * `trig`: the trigger signal (1: start at next pulse; 0: reset to 0)
 //------------------------------------------------------------------------------
 //TODO: author "Vince"
-pulse_countdown(t) =  - ~ _ * t;
+pulse_countdown(trig) = - ~ _ * trig;
 
 
 //----------------------------`(ba.)pulse_countup_loop`------------------------------
@@ -498,9 +532,9 @@ pulse_countdown(t) =  - ~ _ * t;
 // * `trig`: the trigger signal (1: start at next pulse; 0: reset to 0)
 //------------------------------------------------------------------------------
 //TODO: author "Vince"
-pulse_countup_loop(n, t) =  + ~ cond(n)*t
+pulse_countup_loop(n, trig) = + ~ cond(n)*trig
 with {
-  cond(n) =  _ <: _ * (_ <= n);
+  cond(n) = _ <: _ * (_ <= n);
 };
 
 
@@ -531,7 +565,7 @@ resetCtr(n,m) = _ <: (_,pulse_countup_loop(n-1,1)) : (_,(_==m)) : *;
 // #### Usage
 //
 // ```
-// _ : pulse_coundown_loop(n,trig) : _
+// _ : pulse_countdown_loop(n,trig) : _
 // ```
 //
 // Where:
@@ -540,9 +574,9 @@ resetCtr(n,m) = _ <: (_,pulse_countup_loop(n-1,1)) : (_,(_==m)) : *;
 // * `trig`: the trigger signal (1: start at next pulse; 0: reset to 0)
 //------------------------------------------------------------------------------
 //TODO: author "Vince:
-pulse_countdown_loop(n, t) =  - ~ cond(n)*t
+pulse_countdown_loop(n, trig) = - ~ cond(n)*trig
 with {
-  cond(n) =  _ <: _ * (_ >= n);
+  cond(n) = _ <: _ * (_ >= n);
 };
 
 
@@ -557,15 +591,15 @@ with {
 //
 // ```
 // count(l)
-// count ((10,20,30,40)) -> 4
+// count((10,20,30,40)) -> 4
 // ```
 //
 // Where:
 //
 // * `l`: list of elements
 //-----------------------------------------------------------------------------
-count ((xs, xxs)) = 1 + count(xxs);
-count (xx) = 1;
+count((xs, xxs)) = 1 + count(xxs);
+count(xx) = 1;
 
 
 //-------------------------------`(ba.)take`-----------------------------------
@@ -575,18 +609,18 @@ count (xx) = 1;
 // #### Usage
 //
 // ```
-// take(e,l)
+// take(P,l)
 // take(3,(10,20,30,40)) -> 30
 // ```
 //
 // Where:
 //
-// * `p`: position (starting at 1)
+// * `P`: position (int, known at compile time, P > 0)
 // * `l`: list of elements
 //-----------------------------------------------------------------------------
-take (1, (xs, xxs)) 	= xs;
-take (1, xs) 			= xs;
-take (nn, (xs, xxs)) 	= take (nn-1, xxs);
+take(1, (xs, xxs))  = xs;
+take(1, xs)         = xs;
+take(nn, (xs, xxs)) = take(nn-1, xxs);
 
 
 //----------------------------`(ba.)subseq`--------------------------------
@@ -611,10 +645,10 @@ take (nn, (xs, xxs)) 	= take (nn-1, xxs);
 // Faust doesn't have proper lists. Lists are simulated with parallel
 // compositions and there is no empty list.
 //-----------------------------------------------------------------------------
-subseq((head, tail), 0, 1)      = head;
-subseq((head, tail), 0, n)      = head, subseq(tail, 0, n-1);
-subseq((head, tail), p, n)      = subseq(tail, p-1, n);
-subseq(head, 0, n)              = head;
+subseq((head, tail), 0, 1) = head;
+subseq((head, tail), 0, n) = head, subseq(tail, 0, n-1);
+subseq((head, tail), p, n) = subseq(tail, p-1, n);
+subseq(head, 0, n)         = head;
 
 
 //============================Selectors (Conditions)======================================
@@ -633,7 +667,7 @@ subseq(head, 0, n)              = head;
 // * `t`: signal selected while c is true
 // * `e`: signal selected while c is false
 //-----------------------------------------------------------------------------
-if(cond,thn,els) = select2(cond,els,thn);
+if(cond,then,else) = select2(cond,else,then);
 // TODO: perhaps it would make more sense to have an if(a,b) and an ifelse(a,b,c)?
 
 //-----------------------------`(ba.)selector`---------------------------------
@@ -648,14 +682,14 @@ if(cond,thn,els) = select2(cond,els,thn);
 //
 // Where:
 //
-// * `i`: input to select (`int`, numbered from 0, known at compile time)
-// * `n`: number of inputs (`int`, known at compile time, `n > i`)
+// * `i`: input to select (int, numbered from 0, known at compile time)
+// * `n`: number of inputs (int, known at compile time, n > i)
 //
 // There is also cselector for selecting among complex input signals of the form (real,imag).
 //
 //-----------------------------------------------------------------------------
 selector(i,n) = par(j, n, S(i, j))    with { S(i,i) = _; S(i,j) = !; };
-cselector(i,n) = par(j, n, S(i, j))    with { S(i,i) = (_,_); S(i,j) = (!,!); }; // for complex numbers
+cselector(i,n) = par(j, n, S(i, j))   with { S(i,i) = (_,_); S(i,j) = (!,!); }; // for complex numbers
 
 
 //-----------------------------`(ba.)selectn`---------------------------------
@@ -676,7 +710,7 @@ cselector(i,n) = par(j, n, S(i, j))    with { S(i,i) = (_,_); S(i,j) = (!,!); };
 // #### Example test program
 //
 // ```
-// N=64;
+// N = 64;
 // process = par(n,N, (par(i,N,i) : selectn(N,n)));
 // ```
 //-----------------------------------------------------------------------------
@@ -691,13 +725,47 @@ selectn(N,i) = S(N,0)
     };
 
 
+//-----------------------------`(ba.)selectmulti`---------------------------------
+// Selects the ith circuit among n at run time (all should have the same number of inputs and outputs).
+//
+// #### Usage
+//
+// ```
+// selectmulti(lgen,n)
+// ```
+//
+// Where:
+//
+// * `lgen`: list of circuits
+// * `n`: circuit to select (int, numbered from 0)
+//
+// #### Example test program
+//
+// ```
+// process = selectmulti(((3,9),(2,8),(5,7)), nentry("choice", 0, 0, 2, 1));
+// process = selectmulti(((_*3,_*9),(_*2,_*8),(_*5,_*7)), nentry("choice", 0, 0, 2, 1));
+// ```
+//-----------------------------------------------------------------------------
+selectmulti(lgen, n) = selectmultiX(ins, lgen, n)
+with {
+	selectmultiX(0, lgen, n) = selector;                    // Zero inputs
+	selectmultiX(N, lgen, n) = par(i, ins, _) <: selector;  // General case
+	
+	selector = lgen : ro.interleave(outs, N) : par(i, outs, selectn(N, n));
+	
+	outs = outputs(take(1, lgen));  // Number of outputs of the first item (all should have the same value)
+	ins = inputs(take(1, lgen));    // Number of inputs of the first item (all should have the same value)
+	N = outputs(lgen)/outs;         // Number of items in the list
+};
+
+
 //--------------------`(ba.)select2stereo`--------------------
 // Select between 2 stereo signals.
 //
 // #### Usage
 //
 // ```
-// _,_,_,_ : select2stereo(bpc) : _,_,_,_
+// _,_,_,_ : select2stereo(bpc) : _,_    
 // ```
 //
 // Where:
@@ -705,6 +773,7 @@ selectn(N,i) = S(N,0)
 // * `bpc`: the selector switch (0/1)
 //------------------------------------------------------------
 select2stereo(bpc) = ro.cross2 : select2(bpc), select2(bpc) : _,_;
+
 
 //=====================================Other==============================================
 //========================================================================================
@@ -794,7 +863,7 @@ peakhold = (*,_:max) ~ _;
 //----------------------------------------------------------------
 // TODO: author Jonatan Liljedahl
 peakholder(holdtime) = peakhold2 ~ reset : (!,_) with {
-    reset = ba.sweep(holdtime) > 0;
+    reset = sweep(holdtime) > 0;
     // first out is gate that is 1 while holding last peak
     peakhold2 = _,abs <: peakhold,!,_ <: >=,_,!;
 };
@@ -842,7 +911,7 @@ with {
 // * `end(x,y)` to end a break-point function
 // * `point(x,y)` to add intermediate points to a break-point function
 //
-// A minimal break-point function must contain at least a start and an end point :
+// A minimal break-point function must contain at least a start and an end point:
 //
 // ```
 // f = bpf.start(x0,y0) : bpf.end(x1,y1);
@@ -878,7 +947,7 @@ bpf = environment
   // Add a break-point
   point(x1,y1) = \(x0,y0,x,y).(x1, y1, x , if (x < x0, y, if (x < x1, y0 + (x-x0)*(y1-y0)/(x1-x0), y1)));
   // End a break-point function
-  end  (x1,y1) = \(x0,y0,x,y).(if (x < x0, y, if (x < x1, y0 + (x-x0)*(y1-y0)/(x1-x0), y1)));
+  end(x1,y1) = \(x0,y0,x,y).(if (x < x0, y, if (x < x1, y0 + (x-x0)*(y1-y0)/(x1-x0), y1)));
 };
 
 
@@ -967,10 +1036,44 @@ bypass2(bpc,e) = _,_ <: ((inswitch:e),_,_) : select2stereo(bpc)
 //------------------------------------------------------------
 // Author: JOS
 // License: STK-4.3
-bypass1to2(bpc,e) = _ <: ((inswitch:e),_,_) : ba.select2stereo(bpc)
+bypass1to2(bpc,e) = _ <: ((inswitch:e),_,_) : select2stereo(bpc)
   with {
     inswitch = select2(bpc,_,0);
   };
+
+
+//-------------------`(ba.)bypass_fade`-------------------------
+// Bypass an arbitrary (N x N) circuit with 'n' samples crossfade. Once bypassed the  
+// effect is replaced by par(i,N,_). Bypassed circuits can be chained.
+//
+// #### Usage
+//
+// ```
+// _ : bypass_fade(n,b,e) : _
+// or
+// _,_ : bypass_fade(n,b,e) : _,_ 
+// ```
+// * `n`: number of samples for the crossfade
+// * `b`: bypass switch (0/1)
+// * `e`: N x N circuit
+//
+// #### Examples
+//
+// ```
+// process = bypass_fade(ma.SR/10, checkbox("bypass echo"), echo);
+// process = bypass_fade(ma.SR/10, checkbox("bypass reverb"), freeverb);
+// ```
+//---------------------------------------------------------------
+bypass_fade(n, b, e) = par(i, ins, _) 
+			<: (par(i, ins, *(1-xb)) : e : par(i, outs, *(1-xb))), par(i, ins, *(xb))
+			:> par(i, outs, _)
+  with {
+    ins = inputs(e);
+    outs = outputs(e);
+    xb = ramp(n, b);
+    ramp(n) = \(y,x).(if (y+1.0/n < x, y+1.0/n, if(y-1.0/n > x, y-1.0/n, x))) ~ _;
+  };
+
 
 //----------------------------`(ba.)toggle`------------------------------------------
 // Triggered by the change of 0 to 1, it toggles the output value
@@ -1027,18 +1130,18 @@ on_and_off(a, b) = (a : trig) : loop(b)
 // #### Usage
 //
 // ```
-// _ : selectoutn(n, s) : _,_,...n
+// _ : selectoutn(N, i) : _,_,...N
 // ```
 //
 // Where:
 //
-// * `n`: number of outputs (int, known at compile time, N > 0)
-// * `s`: output number to route to (int, numbered from 0) (i.e. slider)
+// * `N`: number of outputs (int, known at compile time, N > 0)
+// * `i`: output number to route to (int, numbered from 0) (i.e. slider)
 //
 // #### Example
 //
 // ```
-// process = 1 : selectoutn(3, sel) : par(i,3,bar) ;
+// process = 1 : selectoutn(3, sel) : par(i,3,bar);
 // sel = hslider("volume",0,0,2,1) : int;
 // bar = vbargraph("v.bargraph", 0, 1);
 // ```
@@ -1195,14 +1298,14 @@ selectoutn(n, s) = _ <: par(i,n, _* (s==i));
 // * turning it on or off: `useVal()`
 // * getting the maximum of all of them: `combine()`
 //
-// In faust, we can only do that for a fixed maximum number of values: `maxN`
+// In Faust, we can only do that for a fixed maximum number of values: `maxN`
 //
 // ```
 // variableBinaryMaxN(N,maxN,x) =
 //  par(i,maxNrBits,recursiveMax(pow2(i),x)@sumOfPrevBlockSizes(N,maxN,i)  : useVal(i)) : combine(maxNrBits) with {
 //    // The sum of all the sizes of the previous blocks
 //    sumOfPrevBlockSizes(N,maxN,0) = 0;
-//    sumOfPrevBlockSizes(N,maxN,i) = (ba.subseq((allBlockSizes(N,maxN)),0,i):>_);
+//    sumOfPrevBlockSizes(N,maxN,i) = (subseq((allBlockSizes(N,maxN)),0,i):>_);
 //    allBlockSizes(N,maxN) = par(i, maxNrBits, pow2(i) * isUsed(i) );
 //    maxNrBits = int2nrOfBits(maxN);
 //    // get the maximum of all blocks
@@ -1210,7 +1313,7 @@ selectoutn(n, s) = _ <: par(i,n, _* (s==i));
 //    combine(N) = max(combine(N-1),_);
 //    // Decide wether or not to use a certain value, based on N
 //    useVal(i) = select2( isUsed(i), (0-(ma.INFINITY)),_);
-//    isUsed(i) = ba.take(i+1,(int2bin(N,maxN)));
+//    isUsed(i) = take(i+1,(int2bin(N,maxN)));
 //  };
 // ```
 //========================================================================================
@@ -1369,7 +1472,6 @@ slidingMeanN(n,maxn) = slidingSumN(n,maxn)/n;
 // * `maxN`: the maximum number of values to process, needs to be a power of 2
 //------------------------------------------------------------------------------
 slidingRMSn(n,maxn) = pow(2):slidingMeanN(n,maxn) : sqrt;
-
 
 
 //////////////////////////////////Deprecated Functions////////////////////////////////////
