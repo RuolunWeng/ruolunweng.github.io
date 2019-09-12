@@ -10,20 +10,31 @@
 
     </head>
     <body bgcolor= "#FFFFFF">
-        <center> <H1 > Testing the embedded dynamic Faust compiler WASM API</H1> </center>
+        <center> <H1 > Faust Web App </H1>
 
+            <!--
             <div id="filedrag">
                 Loading JavaScript/WebAssembly ressources...
             </div>
+            -->
 
+            <div id="versionInfo">
+                <H2 > Loading JavaScript/WebAssembly ressources... </H2>
+            </div>
+            <br><br>
             <form id="upload" action="CompilerResponse" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="MAX_FILE_SIZE" name="MAX_FILE_SIZE" value="5000000" />
             </form>
 
             <button class="loadfile">Load Faust File</button>
             <input type="file" id="file-input" style="display:none"/>
-            <h3>Contents of the Faust file:</h3>
+            <button onclick="window.location.reload();">Stop</button>
+
+            </center>
+
+            <!--<h3>Contents of the Faust file:</h3>-->
             <pre id="file-content"></pre>
+
 
             <script src="js/jsscripts.js"></script>
             <script src="js/libfaust-wasm.js"></script>
