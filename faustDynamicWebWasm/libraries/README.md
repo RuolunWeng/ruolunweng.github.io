@@ -28,14 +28,12 @@ This will give you access to all the Faust libraries through a series of environ
 * `en`: `envelopes.lib`
 * `fi`: `filters.lib`
 * `ho`: `hoa.lib`
-* `it`: `interpolators.lib`
 * `ma`: `maths.lib`
 * `ef`: `misceffects.lib`
 * `os`: `oscillators.lib`
 * `no`: `noises.lib`
 * `pf`: `phaflangers.lib`
 * `pm`: `physmodels.lib`
-* `rm`: `reducemaps.lib`
 * `re`: `reverbs.lib`
 * `ro`: `routes.lib`
 * `si`: `signals.lib`
@@ -154,18 +152,15 @@ Only the libraries that are considered to be "standard" are documented:
 * `envelopes.lib`
 * `filters.lib`
 * `hoa.lib`
-* `interpolators.lib`
 * `maths.lib`
 * `misceffects.lib`
 * `oscillators.lib`
 * `noises.lib`
 * `phaflangers.lib`
 * `physmodels.lib`
-* `reducemaps.lib`
 * `reverbs.lib`
 * `routes.lib`
 * `signals.lib`
-* `soundfiles.lib`
 * `spats.lib`
 * `synths.lib`
 * `tonestacks.lib` (not documented but example in `/examples/misc`)
@@ -203,19 +198,16 @@ dx = library("dx7.lib");
 en = library("envelopes.lib");
 fi = library("filters.lib");
 ho = library("hoa.lib");
-it = library("interpolators.lib");
 ma = library("maths.lib");
 ef = library("misceffects.lib");
 os = library("oscillators.lib");
 no = library("noises.lib");
 pf = library("phaflangers.lib");
 pm = library("physmodels.lib");
-rm = library("reducemaps.lib");
 re = library("reverbs.lib");
 ro = library("routes.lib");
 sp = library("spats.lib");
 si = library("signals.lib");
-so = library("soundfiles.lib");
 sy = library("synths.lib");
 ve = library("vaeffects.lib");
 ```

@@ -267,24 +267,6 @@ cbus(n) = par(i, n, (_,_));
 //-----------------------------------------------------------------------------
 cmul(r1,i1,r2,i2) = (r1*r2 - i1*i2), (r1*i2 + r2*i1);
 
-//--------------------------------`(si.)cconj`-------------------------------------
-// complex conjugation of a (complex) signal.
-// `cconj` is a standard Faust function.
-//
-// #### Usage
-//
-// ```
-// (r1,i1) : cconj : (_,_);
-// ```
-//
-// Where:
-//
-// * Each complex number is represented by two real signals as (real,imag), so
-// - `(r1,i1)` = real and imaginary parts of the input signal
-// - `(r1,-i1)` = real and imaginary parts of the output signal
-//-----------------------------------------------------------------------------
-cconj = _, *(-1);
-
 // end jos section
 /************************************************************************
 FAUST library file, further contributions section
@@ -313,7 +295,7 @@ lag_ud(up,dn) = _ <: ((>,ba.tau2pole(up),ba.tau2pole(dn):select2),_:si.smooth) ~
 // end further further contributions section
 
 //-------------`(si.)rev`---------------
-// Reverse the input signal by blocks of N>0 samples. `rev(1)` is the indentity
+// Reverse the input signal by blocks of N>0 samples. `rev(1)` is the indetity
 // function. `rev(N)` has a latency of `N-1` samples.
 //
 // #### Usage

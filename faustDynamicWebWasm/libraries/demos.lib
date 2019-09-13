@@ -321,7 +321,7 @@ with{
 	env_group(x)  = knob_group(hgroup("[4] Compression Response", x));
 
 	attack = env_group(hslider("[1] Attack [unit:ms] [style:knob] [scale:log]
-	[tooltip: Time constant in ms (1/e smoothing time) for the compression gain
+	tooltip: Time constant in ms (1/e smoothing time) for the compression gain
 	to approach (exponentially) a new lower target level (the compression
 	`kicking in')]", 50, 1, 1000, 0.1)) : *(0.001) : max(1/ma.SR);
 
@@ -563,7 +563,7 @@ with{
 // ```
 //------------------------------------------------------------
 stereo_reverb_tester(revin_group,x,y) = reverb_tester(_)
-with {
+with{
 	reverb_tester(revin_group,x,y) = inx,iny with {
 		ck_group(x) = revin_group(vgroup("[1] Input Config",x));
 		mutegain = 1 - ck_group(checkbox("[1] Mute Ext Inputs
@@ -787,9 +787,9 @@ with{
 	// Regalia-Mitra peaking eq with "Q" hard-wired near sqrt(g)/2 (filters.lib):
 	pareq_stereo(eqf,eql,Q) = fi.peak_eq_rm(eql,eqf,tpbt), fi.peak_eq_rm(eql,eqf,tpbt)
 	with {
-		tpbt = wcT/sqrt(max(0,g)); // tan(PI*B/SR), B bw in Hz (Q^2 ~ g/4)
-		wcT = 2*ma.PI*eqf/ma.SR;  // peak frequency in rad/sample
-		g = ba.db2linear(eql); // peak gain
+	tpbt = wcT/sqrt(max(0,g)); // tan(PI*B/SR), B bw in Hz (Q^2 ~ g/4)
+	wcT = 2*ma.PI*eqf/ma.SR;  // peak frequency in rad/sample
+	g = ba.db2linear(eql); // peak gain
 	};
 
 	eq1_group(x) = fdn_group(hgroup("[3] RM Peaking Equalizer 1", x));
@@ -820,7 +820,7 @@ with{
 
 	dry_wet(x,y) = *(wet) + dry*x, *(wet) + dry*y with {
 		wet = 0.5*(drywet+1.0);
-		dry = 1.0-wet;
+	dry = 1.0-wet;
 	};
 
 	drywet = out_group(vslider("[1] Dry/Wet Mix [style:knob] [tooltip: -1 = dry, 1 = wet]",
@@ -913,7 +913,7 @@ with{
 			+ os.pulsetrain(sfreq*detune2,ptd));
 	ptN = (amp/3) * (os.pulsetrainN(N,sfreq,ptd)
 		    + os.pulsetrainN(N,sfreq*detune1,ptd)
-			+ os.pulsetrainN(N,sfreq*detune2,ptd)) with { N=3; };
+			+ os.pulsetrainN(N,sfreq*detune2,ptd)) with {N=3;};
 	pn = amp * no.pink_noise;
 
 	signal = ssaw*saw + ssq*sq + stri*tri
@@ -1112,60 +1112,11 @@ with{
 // Linux QT:
 //   faust2jaqt reverse_echo_demo.dsp
 //   ./reverse_echo_demo
-// Etc.
 // ```
 //-------------------------------------------------------------------
 reverse_echo_demo(nChans) =  ef.reverseEchoN(nChans,delMax) : ef.uniformPanToStereo(nChans) 
 with {
 	delMax = 2^int(nentry("Log2(Delay)",15,5,16,1)); // delay line length
-};
-
-//------------------------`(dm.)pospass_demo`------------------------
-// Use Positive-Pass Filter pospass() to frequency-shift a sine tone.
-// First, a real sinusoid is converted to its analytic-signal form
-// using pospass() to filter out its negative frequency component.
-// Next, it is multiplied by a modulating complex sinusoid at the
-// shifting frequency to create the frequency-shifted result.
-// The real and imaginary parts are output to channels 1 & 2.
-// For a more interesting frequency-shifting example, check the
-// "Use Mic" checkbox to replace the input sinusoid by mic input.
-// Note that frequency shifting is not the same as frequency scaling.
-// A frequency-shifted harmonic signal is usually not harmonic.
-// Very small frequency shifts give interesting chirp effects when
-// there is feedback around the frequency shifter.
-//
-// #### Usage
-//
-// ```
-// echo 'import("stdfaust.lib");' > pospass_demo.dsp
-// echo 'process = dm.pospass_demo;' >> pospass_demo.dsp
-// Mac:
-//   faust2caqt pospass_demo.dsp
-//   open pospass_demo.app
-// Linux GTK:
-//   faust2jack pospass_demo.dsp
-//   ./pospass_demo
-// Linux QT:
-//   faust2jaqt pospass_demo.dsp
-//   ./pospass_demo
-// Etc.
-// ```
-//-------------------------------------------------------------------
-pospass_demo(x) = analytic_signal, modulator : si.cmul with {
-  N = 6; // pospass filter order
-  fc = ma.SR/(2*N); // guard-band for filter roll-off
-  octavesShift = hslider("Frequency Shift in octaves away from SR/16",
-		 -2,-7,3,0.001) : si.smooth(0.999);
-  in_select = checkbox("Use Mic");
-  sine_tone = os.oscrs(f0);
-  f0 = ma.SR/16.0;   // original frequency to be shifted
-  fn = f0 * 2.0^octavesShift; // modulated frequency
-  df = fn - f0; // frequency-shift as a difference
-  input = select2(in_select, sine_tone, x);
-  analytic_signal = input : fi.pospass6e(fc); // filter out neg freqs
-  //analytic_signal = os.oscrs(f0) : fi.pospass(N,fc); // Butterworth case
-  modulator = os.oscrq(df) : si.cconj; // complex modulation sinusoid
-  // modulator(n) = exp(sqrt(-1) * 2 * ma.PI * df * n / ma.SR) // if complex ok
 };
 
 // end jos section
@@ -1249,35 +1200,35 @@ with{
 	meter_group(x)	= comp_group(hgroup("[0]", x));
 	knob_group(x)  = comp_group(hgroup("[1]", x));
 
-	cbp = meter_group(checkbox("[0] Bypass  [tooltip: When this is checked,
+	    cbp = meter_group(checkbox("[0] Bypass  [tooltip: When this is checked,
 		the compressor has no effect]"));
 
-	gainview = co.compression_gain_mono(ratio,threshold,attack,release) : ba.linear2db
+	    gainview = co.compression_gain_mono(ratio,threshold,attack,release) : ba.linear2db
 		: meter_group(hbargraph("[1] Compressor Gain [unit:dB] [tooltip: Current gain
 		of the compressor in dB]",-50,+10));
 
-	displaygain = _ <: _,abs : _,gainview : attach;
+	    displaygain = _ <: _,abs : _,gainview : attach;
 
-	compressorMono = displaygain(co.compressor_mono(ratio,threshold,attack,release));
+	    compressorMono = displaygain(co.compressor_mono(ratio,threshold,attack,release));
 
-	ctl_group(x)  = knob_group(hgroup("[3] Compression Control", x));
+	    ctl_group(x)  = knob_group(hgroup("[3] Compression Control", x));
 
-	ratio = ctl_group(hslider("[0] Ratio [style:knob]  [tooltip: A compression Ratio
+	    ratio = ctl_group(hslider("[0] Ratio [style:knob]  [tooltip: A compression Ratio
 	of N means that for each N dB increase in input signal level above Threshold, the
 	output level goes up 1 dB]", 5, 1, 20, 0.1));
 
-	threshold = ctl_group(hslider("[1] Threshold [unit:dB] [style:knob] [tooltip:
+	    threshold = ctl_group(hslider("[1] Threshold [unit:dB] [style:knob] [tooltip:
 	When the signal level exceeds the Threshold (in dB), its level is compressed
 	according to the Ratio]", -30, -100, 10, 0.1));
 
-	env_group(x)  = knob_group(hgroup("[4] Compression Response", x));
+	    env_group(x)  = knob_group(hgroup("[4] Compression Response", x));
 
 	attack = env_group(hslider("[1] Attack [unit:ms] [style:knob]  [tooltip:
 	Time constant in ms (1/e smoothing time) for the compression gain to approach
 	(exponentially) a new lower target level (the compression `kicking in')]",
 	50, 0, 500, 0.1)) : *(0.001) : max(1/ma.SR);
 
-	release = env_group(hslider("[2] Release [unit:ms] [style: knob]  [tooltip:
+	    release = env_group(hslider("[2] Release [unit:ms] [style: knob]  [tooltip:
 	Time constant in ms (1/e smoothing time) for the compression gain to approach
 	(exponentially) a new higher target level (the compression 'releasing')]",
 	500, 0, 1000, 0.1)) : *(0.001) : max(1/ma.SR);

@@ -1,8 +1,3 @@
-//#################################### reducemaps.lib ########################################
-// Correct documentation in interpolators.lib, typo in reducemaps.lib, cleanup.
-// A library to handle reduce/map kind of operation in Faust. Its official prefix is `rm`.
-//##############################################################################################
-
 /************************************************************************
  ************************************************************************
 FAUST library file
@@ -31,7 +26,6 @@ declare copyright "Grame";
 declare version "0.1";
 declare license "LGPL"; 
 
-ba = library("basics.lib");
 
 //---------------------------------------------------------------
 // Provides various operations on block of samples
@@ -45,8 +39,9 @@ ba = library("basics.lib");
 //---------------------------------------------------------------
 
 
+
 //---------------------------------------------------------------
-// reduce(op, n, x)
+// reduce (op, n, x)
 //---------------------------------------------------------------
 // Fold-like high order function. Apply a binary operation <op> 
 // on a block of <n> consecutive samples of a signal <x>. 
@@ -58,10 +53,11 @@ ba = library("basics.lib");
 // least one sample (n>0). 
 reduce(op, n, x) = compute ~ (_,_,_) : (!,!,_)
     with {
-        compute(acc, count, val) =
-            ba.if(count<n, op(acc,x), x), // new acc
-            ba.if(count<n, count+1, 1),   // new count
-            ba.if(count<n, val, acc);     // new val
+        compute (acc, count, val) =
+            if(count<n, op(acc,x), x), 		// new acc
+            if(count<n, count+1, 1),     	// new count
+            if(count<n, val, acc);      	// new val
+        if (c, then, else) = select2(c, else, then);
     };
 
 
@@ -74,10 +70,11 @@ reduce(op, n, x) = compute ~ (_,_,_) : (!,!,_)
 // but more efficient.
 reducemap(op, foo, n, x) = compute ~ (_,_,_) : (!,!,_)
     with {
-        compute(acc, count, val) =
-            ba.if(count<n, op(acc,x), x),   // new acc
-            ba.if(count<n, count+1, 1),     // new count
-            ba.if(count<n, val, foo(acc));  // new val
+        compute (acc, count, val) =
+            if(count<n, op(acc,x), x), 		// new acc
+            if(count<n, count+1, 1),     	// new count
+            if(count<n, val, foo(acc));     // new val
+        if (c, then, else) = select2(c, else, then);
     };
 
   
