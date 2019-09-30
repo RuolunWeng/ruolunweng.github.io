@@ -628,17 +628,43 @@ setInterval(function() { savePageState(); if (DSP) { saveDSPState(); }}, 1000);
 faust_module['onRuntimeInitialized'] = init;
 
 // To activate audio on iOS
-window.addEventListener('touchstart', function() {
+window.addEventListener('touchend', iosInit, false);
+window.addEventListener('touchstart', iosInit2, false);
 
-	// create empty buffer
+function iosInit (){
+    // create empty buffer
 	var buffer = audio_context.createBuffer(1, 1, 22050);
 	var source = audio_context.createBufferSource();
 	source.buffer = buffer;
 
 	// connect to output (your speakers)
-	source.connect(audio_context.destination);
+    source.connect(audio_context.destination);
+    
+    // play the file
+    if (source.noteOn) {
+        source.noteOn(0);
+    }
+    else if (source.start) {
+        source.start();
+    }
+    window.removeEventListener('touchend', iosInit, false);
+}
 
-	// play the file
-	source.noteOn(0);
+function iosInit2 (){
+    // create empty buffer
+	var buffer = audio_context.createBuffer(1, 1, 22050);
+	var source = audio_context.createBufferSource();
+	source.buffer = buffer;
 
-}, false);
+	// connect to output (your speakers)
+    source.connect(audio_context.destination);
+    
+    // play the file
+    if (source.noteOn) {
+        source.noteOn(0);
+    }
+    else if (source.start) {
+        source.start();
+    }
+    window.removeEventListener('touchstart', iosInit2, false);
+}
