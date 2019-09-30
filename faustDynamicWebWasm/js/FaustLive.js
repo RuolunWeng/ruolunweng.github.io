@@ -241,23 +241,16 @@ function activateAudioInput()
    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false } })
             // 'as any' is needed here because of a typo in lib.d.ts (echoCancellation is written echoCancelation)
             .then((mediaStream) => {
-            getDevice;
+            // Create an AudioNode from the stream.
+            audio_input = audio_context.createMediaStreamSource(mediaStream);
+            // Connect it to the destination.
+            audio_input.connect(DSP);
             console.log("audio track has settings:", mediaStream.getAudioTracks()[0].getSettings());
         }).catch((err) => {
             console.error(err);
         });
 
 }
-
-function getDevice(device)
-{
-    // Create an AudioNode from the stream.
-    audio_input = audio_context.createMediaStreamSource(device);
-
-    // Connect it to the destination.
-    audio_input.connect(DSP);
-}
-
 
 
 
