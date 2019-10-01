@@ -602,8 +602,12 @@ function init()
 {
     activateMIDIInput();
 
-    var fileSelct = document.getElementById("file-input");
-    fileSelct.addEventListener("change click",fileSelectHandler,false);
+    //var fileSelct = document.getElementById("file-input");
+    //fileSelct.addEventListener("change",fileSelectHandler,false);
+    $('.file-input').on('change click', function(e) { 
+        e.stopPropagation();
+        uploadFileOn(e,compileDSP);
+        return false;});
     $('.loadfile').on('click', function() { $('#file-input').click();return false;});
 
     /*
