@@ -307,11 +307,11 @@ function uploadFileOn(e, callback)
                 }
 
                 reader.onloadend = function(e) {
-                    var contents = e.target.result;
+                    //var contents = e.target.result;
                     //displayContents(contents);
                     dsp_code = "process = vgroup(\"" + filename + "\",environment{" + reader.result + "}.process);";
-                    displayContents(dsp_code);
-                    //callback();
+                    //displayContents(dsp_code);
+                    callback();
                 };
 
             } else {
