@@ -277,7 +277,7 @@ function uploadFile(e)
 
 function displayContents(contents) {
   var element = document.getElementById('file-content');
-  //element.textContent = contents;
+  element.textContent = contents;
 }
 
 function uploadFileOn(e, callback)
@@ -308,8 +308,8 @@ function uploadFileOn(e, callback)
                 }
 
                 reader.onloadend = function(e) {
-                    //var contents = e.target.result;
-                    //displayContents(contents);
+                    var contents = e.target.result;
+                    displayContents(contents);
                     dsp_code = "process = vgroup(\"" + filename + "\",environment{" + reader.result + "}.process);";
                     callback();
                 };
@@ -602,12 +602,8 @@ function init()
 {
     activateMIDIInput();
 
-    //var fileSelct = document.getElementById("file-input");
-    //fileSelct.addEventListener("change",fileSelectHandler,false);
-    $('.file-input').on('change click', function(e) { 
-        e.stopPropagation();
-        uploadFileOn(e,compileDSP);
-        return false;});
+    var fileSelct = document.getElementById("file-input");
+    fileSelct.addEventListener("change",fileSelectHandler,false);
     $('.loadfile').on('click', function() { $('#file-input').click();return false;});
 
     /*
