@@ -265,8 +265,6 @@ function fileDragHover(e)
 
 function fileSelectHandler(e)
 {
-    e.stopPropagation();
-    e.preventDefault();
     uploadFileOn(e,compileDSP);
 }
 
@@ -312,7 +310,7 @@ function uploadFileOn(e, callback)
                     var contents = e.target.result;
                     displayContents(contents);
                     dsp_code = "process = vgroup(\"" + filename + "\",environment{" + reader.result + "}.process);";
-                    callback();
+                    //callback();
                 };
 
             } else {
