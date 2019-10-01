@@ -265,7 +265,8 @@ function fileDragHover(e)
 
 function fileSelectHandler(e)
 {
-   uploadFileOn(e,compileDSP);
+    e.stopPropagation();
+    uploadFileOn(e,compileDSP);
 }
 
 function uploadFile(e)
