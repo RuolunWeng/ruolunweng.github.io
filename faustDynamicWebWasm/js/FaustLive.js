@@ -277,6 +277,9 @@ function uploadFile(e)
 function displayContents(contents) {
   var element = document.getElementById('file-content');
   element.textContent = contents;
+  element.onloadend = function(e){
+      compileDSP();
+  };
 }
 
 function uploadFileOn(e, callback)
@@ -310,8 +313,8 @@ function uploadFileOn(e, callback)
                     //var contents = e.target.result;
                     //displayContents(contents);
                     dsp_code = "process = vgroup(\"" + filename + "\",environment{" + reader.result + "}.process);";
-                    //displayContents(dsp_code);
-                    callback();
+                    displayContents(dsp_code);
+                    //callback();
                 };
 
             } else {
