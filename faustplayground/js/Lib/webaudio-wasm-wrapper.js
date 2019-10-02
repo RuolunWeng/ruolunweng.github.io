@@ -228,7 +228,7 @@ faust.getErrorMessage = function() { return faust.error_msg; };
 
 faust.getLibFaustVersion = function ()
 {
-    return faust_module.UTF8ToString(faust.getCLibFaustVersion());
+    return faust_module.Pointer_stringify(faust.getCLibFaustVersion());
 }
 
 faust.ab2str = function(buf)
@@ -289,8 +289,76 @@ faust.compileCode = function (factory_name, code, argv, internal_memory)
         var time2 = performance.now();
         
         console.log("Faust compilation duration : " + (time2 - time1));
-        faust.error_msg = faust_module.UTF8ToString(error_msg_ptr);
-    
+
+        faust.error_msg = faust_module.Pointer_stringify(error_msg_ptr);
+        
+        /*
+        // New API test
+        
+        //var code =  "process = _,_,_,_;";
+        var code =  "import(\"stdfaust.lib\"); process = dm.zita_rev1;";
+        //var code = "import(\"stdfaust.lib\"); vol = vslider(\"vol\", 0.6, 0, 1, 0.01); process = _+vol,_+(0.3*vol);";
+    	//var code = "import(\"stdfaust.lib\"); vol = vslider(\"vol\", 0.6, 0, 1, 0.01); process = (_+vol)*os.osc(440),_+(0.3*vol*os.osc(800));";     
+        //var code = "import(\"stdfaust.lib\"); process = os.osc(440);";
+
+        var argv1 = faust_module.makeStringVector();
+        console.log(argv1);
+        argv1.push_back("-ftz");
+        argv1.push_back("2");
+        argv1.push_back("-cn");
+        argv1.push_back(factory_name);
+        argv1.push_back("-I");
+        argv1.push_back("http://127.0.0.1:8000/libraries/");
+        
+        var time3 = performance.now();
+        var factory_ptr = faust_module.wasm_dynamic_dsp_factory.createWasmDSPFactoryFromString2("FaustDSP", code, argv1, false);   
+        console.log("FACTORY JSON : " + factory_ptr.getJSON())
+         
+     	var time4 = performance.now();
+        console.log("C++ Faust compilation duration : " + (time4 - time3));
+        
+        if (factory_ptr) {
+        	console.log("factory_ptr " + factory_ptr);
+        	var instance_ptr = factory_ptr.createDSPInstance();
+        	console.log("instance_ptr " + instance_ptr);
+        	console.log("instance_ptr getNumInputs " + instance_ptr.getNumInputs());
+        	console.log("instance_ptr getNumOutputs " + instance_ptr.getNumOutputs());
+     	 	instance_ptr.init(44100);
+        	
+        	instance_ptr.computeJSTest(128);      	
+        	//instance_ptr.compute(128, 0, 0);
+        	 
+        } else {
+        	console.log("getErrorMessage " + faust_module.wasm_dsp_factory.getErrorMessage());
+        }   
+        
+        fetch('t1.wasm')
+        .then(dsp_file => dsp_file.arrayBuffer())
+        .then(dsp_bytes => { var factory_ptr1 = faust_module.wasm_dsp_factory.readWasmDSPFactoryFromMachine2(dsp_bytes);
+        	console.log("factory_ptr1 " + factory_ptr);
+        	var instance_ptr1 = factory_ptr.createDSPInstance();
+        	console.log("instance_ptr1 " + instance_ptr);
+        	console.log("instance_ptr1 getNumInputs " + instance_ptr1.getNumInputs());
+        	console.log("instance_ptr1 getNumOutputs " + instance_ptr1.getNumOutputs());
+        	
+        	//console.log("faust_module.wasm_dsp_factory.createAudioBuffers " + faust_module.wasm_dsp_factory.createAudioBuffers);
+        	
+        	var js_inputs = faust_module.wasm_dsp_factory.createAudioBuffers(instance_ptr1.getNumInputs(), 256);
+        	var js_outputs = faust_module.wasm_dsp_factory.createAudioBuffers(instance_ptr1.getNumOutputs(), 256);
+        	
+        	//console.log("instance_ptr1.compute " + instance_ptr1.compute);
+        	
+        	instance_ptr1.compute(256, js_inputs, js_outputs);
+        	
+        	faust_module.wasm_dsp_factory.deleteAudioBuffers(js_inputs, instance_ptr1.getNumInputs());
+        	faust_module.wasm_dsp_factory.deleteAudioBuffers(js_outputs, instance_ptr1.getNumOutputs());
+        	
+        	//instance_ptr1.computeJSTest(128);
+        });    
+         
+        // End API test
+        */
+
         if (module_code_ptr === 0) {
             return null;
         } else {
@@ -304,9 +372,9 @@ faust.compileCode = function (factory_name, code, argv, internal_memory)
                 // faster than 'getValue' which gets the type of access for each read...
                 factory_code[i] = faust_module.HEAP8[factory_code_ptr + i];
             }
-            
+
             var helpers_code_ptr = faust.getWasmCHelpers(module_code_ptr);
-            var helpers_code = faust_module.UTF8ToString(helpers_code_ptr);
+            var helpers_code = faust_module.Pointer_stringify(helpers_code_ptr);
 
             // Free strings
             faust_module._free(code_ptr);
@@ -329,7 +397,7 @@ faust.compileCode = function (factory_name, code, argv, internal_memory)
 
     } catch (e) {
         // libfaust is compiled without C++ exception activated, so a JS exception is throwed and catched here
-        faust.error_msg = faust_module.UTF8ToString(faust.getErrorAfterException());
+        faust.error_msg = faust_module.Pointer_stringify(faust.getErrorAfterException());
         if (faust.error_msg === "") {
             // Report the Emscripten error
             faust.error_msg = e;
@@ -473,9 +541,9 @@ faust.expandDSP = function (code, argv)
     try {
         
         var expand_dsp_ptr = faust.expandCDSPFromString(name_ptr, code_ptr, argv.length, argv_ptr, sha_key_ptr, error_msg_ptr);
-        var expand_dsp = faust_module.UTF8ToString(expand_dsp_ptr);
-        var sha_key = faust_module.UTF8ToString(sha_key_ptr);
-        faust.error_msg = faust_module.UTF8ToString(error_msg_ptr);
+        var expand_dsp = faust_module.Pointer_stringify(expand_dsp_ptr);
+        var sha_key = faust_module.Pointer_stringify(sha_key_ptr);
+        faust.error_msg = faust_module.Pointer_stringify(error_msg_ptr);
 
         // Free strings
         faust_module._free(code_ptr);
@@ -498,7 +566,7 @@ faust.expandDSP = function (code, argv)
         
     } catch (e) {
         // libfaust is compiled without C++ exception activated, so a JS exception is throwed and catched here
-        faust.error_msg = faust_module.UTF8ToString(faust.getErrorAfterException());
+        faust.error_msg = faust_module.Pointer_stringify(faust.getErrorAfterException());
         if (faust.error_msg === "") {
             // Report the Emscripten error
             faust.error_msg = e;
@@ -729,12 +797,6 @@ faust.createDSPInstance = function (factory, context, buffer_size, callback)
             _sinf: Math.sin,
             _sqrtf: Math.sqrt,
             _tanf: Math.tan,
-            _acoshf: Math.acosh,
-            _asinhf: Math.asinh,
-            _atanhf: Math.atanh,
-            _coshf: Math.cosh,
-            _sinhf: Math.sinh,
-            _tanhf: Math.tanh,
 
             // Double version
             _acos: Math.acos,
@@ -756,12 +818,6 @@ faust.createDSPInstance = function (factory, context, buffer_size, callback)
             _sin: Math.sin,
             _sqrt: Math.sqrt,
             _tan: Math.tan,
-            _acosh: Math.acosh,
-            _asinh: Math.asinh,
-            _atanh: Math.atanh,
-            _cosh: Math.cosh,
-            _sinh: Math.sinh,
-            _tanh: Math.tanh,
 
             table: new WebAssembly.Table({ initial: 0, element: 'anyfunc' })
         }
@@ -918,9 +974,7 @@ faust.createDSPInstance = function (factory, context, buffer_size, callback)
                     for (var i = 0; i < item.meta.length; i++) {
                         if (item.meta[i].midi !== undefined) {
                             if (item.meta[i].midi.trim() === "pitchwheel") {
-                                sp.fPitchwheelLabel.push({ path:item.address,
-                                            min:parseFloat(item.min),
-                                            max:parseFloat(item.max) });
+                                sp.fPitchwheelLabel.push(item.address);
                             } else if (item.meta[i].midi.trim().split(" ")[0] === "ctrl") {
                                 sp.fCtrlLabel[parseInt(item.meta[i].midi.trim().split(" ")[1])]
                                     .push({ path:item.address,
@@ -1104,10 +1158,10 @@ faust.createDSPInstance = function (factory, context, buffer_size, callback)
       	sp.pitchWheel = function (channel, wheel)
         {
            	for (var i = 0; i < sp.fPitchwheelLabel.length; i++) {
-           		var pw = sp.fPitchwheelLabel[i];
-           		sp.setParamValue(pw.path, faust.remap(wheel, 0, 16383, pw.min, pw.max));
-           	    if (sp.output_handler) {
-                    sp.output_handler(pw.path, sp.getParamValue(pw.path));
+           		var path = sp.fPitchwheelLabel[i];
+           		sp.setParamValue(path, Math.pow(2.0, wheel/12.0));
+                if (sp.output_handler) {
+                    sp.output_handler(path, sp.getParamValue(path));
                 }
           	}
         }
@@ -1499,12 +1553,6 @@ var mydspProcessorString = `
             _sinf: Math.sin,
             _sqrtf: Math.sqrt,
             _tanf: Math.tan,
-            _acoshf: Math.acosh,
-            _asinhf: Math.asinh,
-            _atanhf: Math.atanh,
-            _coshf: Math.cosh,
-            _sinhf: Math.sinh,
-            _tanhf: Math.tanh,
 
             // Double version
             _acos: Math.acos,
@@ -1526,12 +1574,6 @@ var mydspProcessorString = `
             _sin: Math.sin,
             _sqrt: Math.sqrt,
             _tan: Math.tan,
-            _acosh: Math.acosh,
-            _asinh: Math.asinh,
-            _atanh: Math.atanh,
-            _cosh: Math.cosh,
-            _sinh: Math.sinh,
-            _tanh: Math.tanh,
 
             table: new WebAssembly.Table({ initial: 0, element: 'anyfunc' })
         }
@@ -1616,9 +1658,7 @@ faust.createDSPWorkletInstanceAux = function(factory, context, callback)
                     for (var i = 0; i < item.meta.length; i++) {
                         if (item.meta[i].midi !== undefined) {
                             if (item.meta[i].midi.trim() === "pitchwheel") {
-                                obj.fPitchwheelLabel.push({ path:item.address,
-                                      min:parseFloat(item.min),
-                                      max:parseFloat(item.max) });
+                                obj.fPitchwheelLabel.push(item.address);
                             } else if (item.meta[i].midi.trim().split(" ")[0] === "ctrl") {
                                 obj.fCtrlLabel[parseInt(item.meta[i].midi.trim().split(" ")[1])]
                                 .push({ path:item.address,
@@ -1698,10 +1738,10 @@ faust.createDSPWorkletInstanceAux = function(factory, context, callback)
     audio_node.pitchWheel = function(channel, wheel)
     {
         for (var i = 0; i < this.fPitchwheelLabel.length; i++) {
-            var pw = this.fPitchwheelLabel[i];
-            this.setParamValue(pw.path, audio_node.remap(wheel, 0, 16383, pw.min, pw.max));
+            var path = this.fPitchwheelLabel[i];
+            this.setParamValue(path, Math.pow(2.0, wheel/12.0));
             if (this.output_handler) {
-                this.output_handler(pw.path, this.getParamValue(pw.path));
+                this.output_handler(path, this.getParamValue(path));
             }
         }
     }
@@ -1718,7 +1758,7 @@ faust.createDSPWorkletInstanceAux = function(factory, context, callback)
         } else if (cmd === 11) {
             this.ctrlChange(channel, data1, data2);
         } else if (cmd === 14) {
-            this.pitchWheel(channel, (data2 * 128.0 + data1));
+            this.pitchWheel(channel, ((data2 * 128.0 + data1)-8192)/8192.0);
         }
     }
     
@@ -1963,7 +2003,8 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
     sp.dsp_voices_state = [];
     sp.dsp_voices_level = [];
     sp.dsp_voices_date = [];
-   
+    sp.dsp_voices_trigger = [];
+
     sp.kActiveVoice = 0;
     sp.kFreeVoice = -1;
     sp.kReleaseVoice = -2;
@@ -1976,6 +2017,7 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
         sp.dsp_voices_state[i] = sp.kFreeVoice;
         sp.dsp_voices_level[i] = 0;
         sp.dsp_voices_date[i] = 0;
+        sp.dsp_voices_trigger[i] = false;
     }
 
     // Effect memory starts after last voice
@@ -2002,9 +2044,8 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
     // Always returns a voice
     sp.allocVoice = function(voice)
     {
-        // so that envelop is always re-initialized
-        sp.factory.instanceClear(sp.dsp_voices[voice]);
         sp.dsp_voices_date[voice] = sp.fDate++;
+        sp.dsp_voices_trigger[voice] = true;    // so that envelop is always re-initialized
         sp.dsp_voices_state[voice] = sp.kActiveVoice;
         return voice;
     }
@@ -2087,8 +2128,21 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
         // Compute all running voices
         for (i = 0; i < polyphony; i++) {
             if (sp.dsp_voices_state[i] != sp.kFreeVoice) {
-                // Compute voice
-                sp.factory.compute(sp.dsp_voices[i], buffer_size, sp.ins, sp.mixing);
+                if (sp.dsp_voices_trigger[i]) {
+                    // FIXME : properly cut the buffer in 2 slices...
+                    for (var j = 0; j < sp.fGateLabel.length; j++) {
+                        sp.factory.setParamValue(sp.dsp_voices[i], sp.fGateLabel[j], 0.0);
+                    }
+                    sp.factory.compute(sp.dsp_voices[i], 1, sp.ins, sp.mixing);
+                    for (var j = 0; j < sp.fGateLabel.length; j++) {
+                        sp.factory.setParamValue(sp.dsp_voices[i], sp.fGateLabel[j], 1.0);
+                    }
+                    sp.factory.compute(sp.dsp_voices[i], buffer_size, sp.ins, sp.mixing);
+                    sp.dsp_voices_trigger[i] = false;
+                } else {
+                    // Compute regular voice
+                    sp.factory.compute(sp.dsp_voices[i], buffer_size, sp.ins, sp.mixing);
+                }
                 // Mix it in result
                 sp.dsp_voices_level[i] = sp.mixer.mixVoice(buffer_size, sp.numOut, sp.mixing, sp.outs);
                 // Check the level to possibly set the voice in kFreeVoice again
@@ -2164,9 +2218,7 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
                 for (var i = 0; i < item.meta.length; i++) {
                     if (item.meta[i].midi !== undefined) {
                         if (item.meta[i].midi.trim() === "pitchwheel") {
-                            sp.fPitchwheelLabel.push({ path:item.address,
-                                  min:parseFloat(item.min),
-                                  max:parseFloat(item.max) });
+                            sp.fPitchwheelLabel.push(item.address);
                         } else if (item.meta[i].midi.trim().split(" ")[0] === "ctrl") {
                             sp.fCtrlLabel[parseInt(item.meta[i].midi.trim().split(" ")[1])]
                             .push({ path:item.address,
@@ -2372,13 +2424,11 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
         for (var i = 0; i < sp.fFreqLabel.length; i++) {
             sp.factory.setParamValue(sp.dsp_voices[voice], sp.fFreqLabel[i], sp.midiToFreq(pitch));
         }
-        for (var i = 0; i < sp.fGateLabel.length; i++) {
-            sp.factory.setParamValue(sp.dsp_voices[voice], sp.fGateLabel[i], 1.0);
-        }
         for (var i = 0; i < sp.fGainLabel.length; i++) {
             sp.factory.setParamValue(sp.dsp_voices[voice], sp.fGainLabel[i], velocity/127.);
         }
         sp.dsp_voices_state[voice] = pitch;
+        sp.dsp_voices_trigger[voice] = true;
     }
 
     /**
@@ -2392,6 +2442,8 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
     {
         var voice = sp.getPlayingVoice(pitch);
         if (voice !== sp.kNoVoice) {
+            // Be sure the voice is not triggered
+            sp.dsp_voices_trigger[voice] = false;  
             if (faust.debug) {
                 console.log("keyOff voice %d", voice);
             }
@@ -2453,10 +2505,10 @@ faust.createPolyDSPInstanceAux = function (factory, time1, mixer_instance, dsp_i
     sp.pitchWheel = function (channel, wheel)
     {
         for (var i = 0; i < sp.fPitchwheelLabel.length; i++) {
-            var pw = sp.fPitchwheelLabel[i];
-            sp.setParamValue(pw.path, faust.remap(wheel, 0, 16383, pw.min, pw.max));
+            var path = sp.fPitchwheelLabel[i];
+            sp.setParamValue(path, Math.pow(2.0, wheel/12.0));
             if (sp.output_handler) {
-                sp.output_handler(pw.path, sp.getParamValue(pw.path));
+                sp.output_handler(path, sp.getParamValue(path));
             }
         }
     }
@@ -2609,12 +2661,6 @@ faust.createPolyDSPInstance = function (factory, context, buffer_size, polyphony
             _sinf: Math.sin,
             _sqrtf: Math.sqrt,
             _tanf: Math.tan,
-            _acoshf: Math.acosh,
-            _asinhf: Math.asinh,
-            _atanhf: Math.atanh,
-            _coshf: Math.cosh,
-            _sinhf: Math.sinh,
-            _tanhf: Math.tanh,
 
             // Double version
             _acos: Math.acos,
@@ -2636,12 +2682,6 @@ faust.createPolyDSPInstance = function (factory, context, buffer_size, polyphony
             _sin: Math.sin,
             _sqrt: Math.sqrt,
             _tan: Math.tan,
-            _acosh: Math.acosh,
-            _asinh: Math.asinh,
-            _atanh: Math.atanh,
-            _cosh: Math.cosh,
-            _sinh: Math.sinh,
-            _tanh: Math.tanh,
 
             memory: memory,
 
@@ -2765,9 +2805,7 @@ var mydspPolyProcessorString = `
                     for (var i = 0; i < item.meta.length; i++) {
                         if (item.meta[i].midi !== undefined) {
                             if (item.meta[i].midi.trim() === "pitchwheel") {
-                                obj.fPitchwheelLabel.push({ path:item.address,
-                                      min:parseFloat(item.min),
-                                      max:parseFloat(item.max) });
+                                obj.fPitchwheelLabel.push(item.address);
                             } else if (item.meta[i].midi.trim().split(" ")[0] === "ctrl") {
                                 obj.fCtrlLabel[parseInt(item.meta[i].midi.trim().split(" ")[1])]
                                 .push({ path:item.address,
@@ -2954,12 +2992,6 @@ var mydspPolyProcessorString = `
                     _sinf: Math.sin,
                     _sqrtf: Math.sqrt,
                     _tanf: Math.tan,
-                    _acoshf: Math.acosh,
-                    _asinhf: Math.asinh,
-                    _atanhf: Math.atanh,
-                    _coshf: Math.cosh,
-                    _sinhf: Math.sinh,
-                    _tanhf: Math.tanh,
 
                     // Double version
                     _acos: Math.acos,
@@ -2981,12 +3013,6 @@ var mydspPolyProcessorString = `
                     _sin: Math.sin,
                     _sqrt: Math.sqrt,
                     _tan: Math.tan,
-                    _acosh: Math.acosh,
-                    _asinh: Math.asinh,
-                    _atanh: Math.atanh,
-                    _cosh: Math.cosh,
-                    _sinh: Math.sinh,
-                    _tanh: Math.tanh,
 
                     memory: wasm_memory,
 
@@ -3046,7 +3072,8 @@ var mydspPolyProcessorString = `
             this.dsp_voices_state = [];
             this.dsp_voices_level = [];
             this.dsp_voices_date = [];
-          
+            this.dsp_voices_trigger = [];
+
             this.kActiveVoice = 0;
             this.kFreeVoice = -1;
             this.kReleaseVoice = -2;
@@ -3062,6 +3089,7 @@ var mydspPolyProcessorString = `
                 this.dsp_voices_state[i] = this.kFreeVoice;
                 this.dsp_voices_level[i] = 0;
                 this.dsp_voices_date[i] = 0;
+                this.dsp_voices_trigger[i] = false;
             }
 
             // Effect memory starts after last voice
@@ -3110,9 +3138,8 @@ var mydspPolyProcessorString = `
             // Always returns a voice
             this.allocVoice = function(voice)
             {
-                // so that envelop is always re-initialized
-                this.factory.instanceClear(this.dsp_voices[voice]);
                 this.dsp_voices_date[voice] = this.fDate++;
+                this.dsp_voices_trigger[voice] = true;    // "so that envelop is always re-initialized
                 this.dsp_voices_state[voice] = this.kActiveVoice;
                 return voice;
             }
@@ -3253,19 +3280,19 @@ var mydspPolyProcessorString = `
                 for (var i = 0; i < this.fFreqLabel.length; i++) {
                     this.factory.setParamValue(this.dsp_voices[voice], this.fFreqLabel[i], this.midiToFreq(pitch));
                 }
-                for (var i = 0; i < this.fGateLabel.length; i++) {
-                	this.factory.setParamValue(this.dsp_voices[voice], this.fGateLabel[i], 1.0);
-           		}
                 for (var i = 0; i < this.fGainLabel.length; i++) {
                     this.factory.setParamValue(this.dsp_voices[voice], this.fGainLabel[i], velocity/127.);
                 }
                 this.dsp_voices_state[voice] = pitch;
+                this.dsp_voices_trigger[voice] = true;
             }
 
             this.keyOff = function (channel, pitch, velocity)
             {
                 var voice = this.getPlayingVoice(pitch);
                 if (voice !== this.kNoVoice) {
+                    // Be sure the voice is not triggered
+                    this.dsp_voices_trigger[voice] = false;  
                     // No use of velocity for now...
                     for (var i = 0; i < this.fGateLabel.length; i++) {
                         this.factory.setParamValue(this.dsp_voices[voice], this.fGateLabel[i], 0.0);
@@ -3309,10 +3336,10 @@ var mydspPolyProcessorString = `
             this.pitchWheel = function (channel, wheel)
             {
                 for (var i = 0; i < this.fPitchwheelLabel.length; i++) {
-                    var pw = this.fPitchwheelLabel[i];
-                    this.setParamValue(path, mydspPolyProcessor.remap(wheel, 0, 16383, pw.min, pw.max));
+                    var path = this.fPitchwheelLabel[i];
+                    this.setParamValue(path, Math.pow(2.0, wheel/12.0));
                     if (this.output_handler) {
-                        this.output_handler(pw.path, this.getParamValue(pw.path));
+                        this.output_handler(path, this.getParamValue(path));
                     }
                 }
             }
@@ -3378,7 +3405,7 @@ var mydspPolyProcessorString = `
             } else if (cmd === 11) {
                 this.ctrlChange(channel, data1, data2);
             } else if (cmd === 14) {
-                this.pitchWheel(channel, (data2 * 128.0 + data1));
+                this.pitchWheel(channel, ((data2 * 128.0 + data1)-8192)/8192.0);
             }
         }
 
@@ -3417,8 +3444,21 @@ var mydspPolyProcessorString = `
             // Compute all running voices
             for (var i = 0; i < this.polyphony; i++) {
                 if (this.dsp_voices_state[i] != this.kFreeVoice) {
-                    // Compute voice
-                    this.factory.compute(this.dsp_voices[i], mydspPolyProcessor.buffer_size, this.ins, this.mixing);
+                    if (this.dsp_voices_trigger[i]) {
+                        // FIXME : properly cut the buffer in 2 slices...
+                        for (var j = 0; j < this.fGateLabel.length; j++) {
+                            this.factory.setParamValue(this.dsp_voices[i], this.fGateLabel[j], 0.0);
+                        }
+                        this.factory.compute(this.dsp_voices[i], 1, this.ins, this.mixing);
+                        for (var j = 0; j < this.fGateLabel.length; j++) {
+                            this.factory.setParamValue(this.dsp_voices[i], this.fGateLabel[j], 1.0);
+                        }
+                        this.factory.compute(this.dsp_voices[i], mydspPolyProcessor.buffer_size, this.ins, this.mixing);
+                        this.dsp_voices_trigger[i] = false;
+                    } else {
+                        // Compute regular voice
+                        this.factory.compute(this.dsp_voices[i], mydspPolyProcessor.buffer_size, this.ins, this.mixing);
+                    }
                     // Mix it in result
                     this.dsp_voices_level[i] = this.mixer.mixVoice(mydspPolyProcessor.buffer_size, this.numOut, this.mixing, this.outs);
                     // Check the level to possibly set the voice in kFreeVoice again
@@ -3631,7 +3671,7 @@ faust.createPolyDSPWorkletInstanceAux = function (factory, context, polyphony, c
      */
     audio_node.allNotesOff = function()
     {
-        this.port.postMessage({ type: "ctrlChange", data: [0, 123, 0] });
+        this.port.postMessage({ type: "ctrlChange", data: [channel, 123, 0] });
     }
 
     audio_node.ctrlChange = function(channel, ctrl, value)
