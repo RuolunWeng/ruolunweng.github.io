@@ -156,8 +156,8 @@ function uploadFile(e) {
 }
 
 function displayContents(contents) {
-    var element = document.getElementById('file-content');
-    element.textContent = contents;
+    //var element = document.getElementById('file-content');
+   // element.textContent = contents;
 }
 
 
