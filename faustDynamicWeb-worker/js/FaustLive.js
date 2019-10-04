@@ -15,7 +15,7 @@ var poly_flag = "OFF";
 var poly_nvoices = 16;
 var output_handler = null;
 //var libraries_url = "http://faust.grame.fr/libraries/";
-var libraries_url = "https://github.com/RuolunWeng/ruolunweng.github.io/faustDynamicWebWasm/libraries/";
+var libraries_url = "https://ruolunweng.github.io/faustDynamicWebWasm/libraries/";
 var preload_url = "dsp/Kisana.dsp";
 var module = null;
 var acc_flag = true;
@@ -462,6 +462,8 @@ function iosInit() {
     } else if (source.start) {
         source.start();
     }
+    
+    window.DeviceMotionEvent.requestPermission();
     window.removeEventListener('touchend', iosInit, false);
 }
 
