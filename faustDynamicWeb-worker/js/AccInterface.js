@@ -63,13 +63,33 @@ var AccelerometerHandler = (function () {
     // get Accelerometer value
     AccelerometerHandler.prototype.getAccelerometerValue = function () {
         var _this = this;
+    
         if (window.DeviceMotionEvent) {
-            window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
-            if (navigator.userAgent.match(/Android/i)) {
-               devicemotionOffst = -1;
+             if (typeof window.DeviceMotionEvent.requestPermission === 'function') {
+            // iOS 13+
+                window.DeviceMotionEvent.requestPermission()
+                .then(response => {
+                if (response == 'granted') {
+                window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
+                if (navigator.userAgent.match(/Android/i)) {
+                    devicemotionOffst = -1;
+                } else {
+                    devicemotionOffst = 1;
+                }
+                }
+                })
+                .catch(console.error)
+        
             } else {
-               devicemotionOffst = 1;
+            // non iOS 13+
+                window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
+                if (navigator.userAgent.match(/Android/i)) {
+                    devicemotionOffst = -1;
+                } else {
+                    devicemotionOffst = 1;
+                }
             }
+            
         }
         else {
             // Browser doesn't support DeviceMotionEvent
