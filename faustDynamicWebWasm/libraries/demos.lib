@@ -196,7 +196,7 @@ with{
 	ftop = 10000;
 	mthoctavefilterbankdemo = chan;
 	chan = fi.mth_octave_filterbank_default(M,ftop,N) : sum(i,N,(*(ba.db2linear(fader(N-i)))));
-	fader(i) = slider_group(vslider("Band%2i [unit:dB] [tooltip: Bandpass filter
+	fader(i) = slider_group(vslider("[%2i] [unit:dB] [tooltip: Bandpass filter
 		gain in dB]", -10, -70, 10, 0.1)) : si.smoo;
 	bp = bypass_group(checkbox("[0] Bypass
 		[tooltip: When this is checked, the filter-bank has no effect]"));
@@ -856,10 +856,10 @@ with{
 	freq = knob_group(vslider("[2] Frequency [unit:PK] [style:knob] [tooltip: Sawtooth
 		frequency as a Piano Key (PK) number (A440 = key 49)]",49,1,88,0.01) : ba.pianokey2hz);
 	detune1 = 1 + 0.01 * knob_group(
-	vslider("[3] Detuning 1 [unit:%%] [style:knob] [tooltip: Percentage frequency-shift
+	vslider("[3] Detuning 1 [unit:%%] [style:knob] [tooltip: Percentange frequency-shift
 	up or down for second oscillator]",-0.1,-10,10,0.01));
 	detune2 = 1 + 0.01 * knob_group(vslider("[4] Detuning 2 [unit:%%] [style:knob] [tooltip:
-		Percentage frequency-shift up or down for third detuned oscillator]",+0.1,-10,10,0.01));
+		Percentange frequency-shift up or down for third detuned oscillator]",+0.1,-10,10,0.01));
 	portamento = knob_group(vslider("[5] Portamento [unit:sec] [style:knob] [scale:log]
 	[tooltip: Portamento (frequency-glide) time-constant in seconds]",0.1,0.001,10,0.001));
 	sfreq = freq : si.smooth(ba.tau2pole(portamento));
@@ -951,11 +951,11 @@ with{
 
 	detune1 = 1 - 0.01 * knob_group(
 		vslider("[3] Detuning 1 [unit:%%] [style:knob]
-	[tooltip: Percentage frequency-shift up or down for second oscillator]",
+	[tooltip: Percentange frequency-shift up or down for second oscillator]",
 	-0.1,-10,10,0.01));
 	detune2 = 1 + 0.01 * knob_group(
 	vslider("[4] Detuning 2 [unit:%%] [style:knob]
-	[tooltip: Percentage frequency-shift up or down for third detuned oscillator]",
+	[tooltip: Percentange frequency-shift up or down for third detuned oscillator]",
 	+0.1,-10,10,0.01));
 	portamento = knob_group(
 	vslider("[5] Portamento [unit:sec] [style:knob] [scale:log]
