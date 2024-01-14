@@ -63,6 +63,39 @@ var AccelerometerHandler = (function () {
     // get Accelerometer value
     AccelerometerHandler.prototype.getAccelerometerValue = function () {
         var _this = this;
+
+        function permission () {
+    if ( typeof( DeviceMotionEvent ) !== "undefined" && typeof( DeviceMotionEvent.requestPermission ) === "function" ) {
+        // (optional) Do something before API request prompt.
+        DeviceMotionEvent.requestPermission()
+            .then( response => {
+            // (optional) Do something after API prompt dismissed.
+            if ( response == "granted" ) {
+                window.addEventListener( "devicemotion", (e) => {
+                    // do something for 'e' here.
+                    _this.propagate(e);
+                    console.log("DeviceMotionEvent added");
+                })
+
+                if (navigator.userAgent.match(/Android/i)) {
+               devicemotionOffst = -1;
+            } else {
+               devicemotionOffst = 1;
+                console.log("iOS Browser support DeviceMotionEvent");
+            }
+
+                
+            }
+        })
+            .catch( console.error )
+    } else {
+        alert( "Browser doesn't support DeviceMotionEvent" );
+    }
+}
+//const btn = document.getElementById( "request" );
+$('.loadfile').on('click', permission );
+
+        /*
         // Button element
         // var startButton = document.getElementById('file-input');
         
@@ -84,6 +117,8 @@ var AccelerometerHandler = (function () {
             // Browser doesn't support DeviceMotionEvent
             console.log("Browser doesn't support DeviceMotionEvent");
         }
+
+        */
     };
     // propagate the new x, y, z value of the accelerometer to the registred object
     AccelerometerHandler.prototype.propagate = function (event) {
