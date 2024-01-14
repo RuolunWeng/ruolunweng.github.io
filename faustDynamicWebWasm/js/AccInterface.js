@@ -76,6 +76,7 @@ var AccelerometerHandler = (function () {
                devicemotionOffst = -1;
             } else {
                devicemotionOffst = 1;
+                console.log("iOS Browser support DeviceMotionEvent");
             }
         }
         else {
