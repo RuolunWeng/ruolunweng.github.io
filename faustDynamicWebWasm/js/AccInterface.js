@@ -69,6 +69,7 @@ var AccelerometerHandler = (function () {
         if (window.DeviceMotionEvent) {
             startButton.addEventListener('click', function () {
                 window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
+                console.log("DeviceMotionEvent added");
             });
             
             if (navigator.userAgent.match(/Android/i)) {
