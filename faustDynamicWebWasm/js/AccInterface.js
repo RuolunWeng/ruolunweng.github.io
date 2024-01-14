@@ -63,8 +63,14 @@ var AccelerometerHandler = (function () {
     // get Accelerometer value
     AccelerometerHandler.prototype.getAccelerometerValue = function () {
         var _this = this;
+        // Button element
+        var startButton = document.getElementById('file-input');
+        
         if (window.DeviceMotionEvent) {
-            window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
+            startButton.addEventListener('click', function () {
+                window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
+            });
+            
             if (navigator.userAgent.match(/Android/i)) {
                devicemotionOffst = -1;
             } else {
