@@ -64,10 +64,11 @@ var AccelerometerHandler = (function () {
     AccelerometerHandler.prototype.getAccelerometerValue = function () {
         var _this = this;
         // Button element
-        var startButton = document.getElementById('file-input');
+        // var startButton = document.getElementById('file-input');
         
         if (window.DeviceMotionEvent) {
-            startButton.addEventListener('click', function () {
+            //startButton.addEventListener('click', function () {
+            $('.loadfile').on('click', function() {
                 window.addEventListener("devicemotion", function (event) { _this.propagate(event); }, false);
                 console.log("DeviceMotionEvent added");
             });
