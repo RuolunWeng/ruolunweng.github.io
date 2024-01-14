@@ -65,35 +65,36 @@ var AccelerometerHandler = (function () {
         var _this = this;
 
         function permission () {
-    if ( typeof( DeviceMotionEvent ) !== "undefined" && typeof( DeviceMotionEvent.requestPermission ) === "function" ) {
-        // (optional) Do something before API request prompt.
-        DeviceMotionEvent.requestPermission()
-            .then( response => {
-            // (optional) Do something after API prompt dismissed.
-            if ( response == "granted" ) {
-                window.addEventListener( "devicemotion", (e) => {
-                    // do something for 'e' here.
-                    _this.propagate(e);
-                    console.log("DeviceMotionEvent added");
+            if ( typeof( DeviceMotionEvent ) !== "undefined" && typeof( DeviceMotionEvent.requestPermission ) === "function" ) {
+                // (optional) Do something before API request prompt.
+                DeviceMotionEvent.requestPermission()
+                    .then( response => {
+                    // (optional) Do something after API prompt dismissed.
+                    if ( response == "granted" ) {
+                        window.addEventListener( "devicemotion", (e) => {
+                            // do something for 'e' here.
+                            _this.propagate(e);
+                            //console.log("DeviceMotionEvent added");
+                        })
+        
+                    if (navigator.userAgent.match(/Android/i)) {
+                       devicemotionOffst = -1;
+                       console.log("Android Browser support DeviceMotionEvent");
+                    } else {
+                       devicemotionOffst = 1;
+                       console.log("iOS Browser support DeviceMotionEvent");
+                    }
+        
+                        
+                    }
                 })
-
-                if (navigator.userAgent.match(/Android/i)) {
-               devicemotionOffst = -1;
+                    .catch( console.error )
             } else {
-               devicemotionOffst = 1;
-                console.log("iOS Browser support DeviceMotionEvent");
+                alert( "Browser doesn't support DeviceMotionEvent" );
             }
-
-                
-            }
-        })
-            .catch( console.error )
-    } else {
-        alert( "Browser doesn't support DeviceMotionEvent" );
-    }
-}
-//const btn = document.getElementById( "request" );
-$('.loadfile').on('click', permission );
+        }
+        //const btn = document.getElementById( "request" );
+        $('.loadfile').on('click', permission );
 
         /*
         // Button element
