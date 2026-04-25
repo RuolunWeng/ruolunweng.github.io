@@ -1,6 +1,4 @@
-﻿<?xml version="1.0" standalone="no"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" >
+﻿<!doctype html>
 <html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -8,25 +6,26 @@
 
 	<title>FaustPlayGround</title>
 
-	<link rel="shortcut icon" href="favicon.ico" />
+	<link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAD///////////39////////+Pr+/7jN+f94ofP/WYvw/1mL8P94ofP/uM35//j6/v///////f3///////////////////39////////tsz5/zZz7f8KVer/A1Dp/wRQ6f8EUOn/A1Dp/wpV6v80cu3/uM75///////9/f////////z9////////gaf0/wBN6f8MVer/ClTp/xNb6v8RWur/EVrq/xJa6v8IU+n/EFjq/wBJ6P+EqvT///////39////////l7f2/xBY6v/L2/r/5e39/zh17v8HU+n/EVnq/xFZ6v8FUen/bpry//r7//+cuvb/AEjo/5y69v//////4er8/wtW6v9bjfH///////////+Gq/T/AE3p/xNb6v8PWOr/DFbq/8nZ+v//////8vb+/yFk7P8WXev/3+n8/3qi8/8ATen/IGTs/7zQ+f/W4vv/NHLt/wlU6v8RWer/EVnq/whT6f9kk/H/6fD9/4mt9f8NVur/A1Dp/3mi8/80cu3/ClTq/wxW6v8FUun/Akzo/wBI6P8MV+r/D1jq/xBZ6v8FUen/AEXo/wRP6f8FUun/D1jq/wlU6f80cu3/Fl3r/w9Y6v8LVer/LW3t/2ST8f9gkPH/HmLr/w1X6v8LVer/RH3v/2eV8v9ajPH/F17r/w5X6v8OWOr/Fl3r/xFZ6v8RWer/BlLp/zl17v/5+/7//////2qX8v8ATOn/GF7r/9jk/P//////yNn6/wxW6v8PWOr/D1jq/xFZ6v8naez/C1Xq/xJa6v8CT+n/ssn4//////+2zPn/AEjo/0iA7//+/v///////2qX8v8ATOn/FFvq/wtV6v8naez/XY7x/wRQ6f8VXOv/AE7p/2CR8f//////8/f+/xdd6/+HrPX//////+zx/f8lZ+z/ClTq/xNb6v8EUOn/XY7x/77S+f8KVer/Elrq/wxW6v8cYev/4uv8//////9pl/L/wtT6//////+owvf/Ak/p/xJa6v8RWer/ClXq/77S+f//////ZpTy/wBJ6P8ZX+v/AE7p/5q59v//////3uj8//D1/v//////Vonw/wJP6f8YX+v/AEno/2aU8v////////////P2/v9Efe//AEvo/wVR6f9Lgu////////z9////////4Or8/xpg6/8OV+r/AEno/0R97//z9v7///////7+////////8/f+/22Z8v8LVer/BFDp/8bX+v/4+v7//////4qt9f8ARej/D1jq/22Z8v/z9/7///////7+/////////v7///3+////////x9j6/2GR8f8/ee7/NnPt/zVz7f80cu3/YpLx/8bY+v///////f7///7+////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" />
 
-<!-- CSS DESCRIPTIONS -->
-	<link rel="stylesheet" href="css/Reset.css" />
-	<link rel="stylesheet" href="css/Main.css" />
-	<link rel="stylesheet" href="css/FaustInterface.css" />
-	<link rel="stylesheet" href="css/Library.css" />
-	<link rel="stylesheet" href="css/Modules.css" />
-	<link rel="stylesheet" href="css/Scenes.css" />
-    <link rel="stylesheet" href="css/Playground.css" />
-    <link rel="stylesheet" href="css/Menu.css" />
-	<link rel="stylesheet" href="css/AccelerometerEdit.css" />
-    <link rel="stylesheet" href="css/perfect-scrollbar.min.css" />
-<!-- JAVASCRIPT FUNCTIONS -->
+	
+	
+	
+	
+	
+	
+    
+    
+	
+    
+    
 
 	<script>
 	if (window != window.top)
 		document.write("<style>header {display:none}</style>")
 	</script>
+  <script type="module" crossorigin src="/faustplayground/assets/index-f20840be.js"></script>
+  <link rel="stylesheet" href="/faustplayground/assets/index-d616123f.css">
 </head>
 <body>
     <div id="loadingPage">
@@ -34,26 +33,8 @@
     </div>
 </body>
 
-<!-- JAVASCRIPT LIBRARIES USED -->
-<script src="js/Lib/AudioContextMonkeyPatch.js"></script>
-<script src="js/Lib/qrcode.js"></script>
-<script src="js/Lib/perfectScrollBar/js/perfect-scrollbar.min.js"></script>
-<script src="js/Lib/libfaust-wasm.js"></script>
-<script src="js/Lib/webaudio-wasm-wrapper.js"></script>
-<script src="js/Lib/FileSaver.min.js"></script>
-<script src="js/Lib/client.js?onload=checkAuth"></script>
-<script src="js/faustplayground.js"></script>
+<script src="https://apis.google.com/js/client.js?onload=checkAuth"></script>
 
- <!-- 'init' is defined in faustplayground.js -->
-<script>
-        var isWasm = (typeof (WebAssembly) !== "undefined");
-        if (!isWasm) {
-            alert("WebAssembly is not supported in this browser, the page will not work !")
-        }
-        // 'faust_module' global is defined in webaudio-wasm-wrapper.js file, 'onRuntimeInitialized' will be called when code is ready
-        // (see https://kripken.github.io/emscripten-site/docs/getting_started/FAQ.html)
-        
-        faust_module['onRuntimeInitialized'] = init;
-    </script>
+
 
 </html>
