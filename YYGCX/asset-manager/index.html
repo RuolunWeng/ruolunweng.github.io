@@ -309,7 +309,7 @@ td.truncate { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white
     </header>
 
     <div class="search-bar">
-      <input type="text" id="search-input" placeholder="搜索编号、名称、地点、使用人..." />
+      <input type="text" id="search-input" placeholder="搜索编号、名称、地点、使用人… 或输入编号区间如 20191000-20192000" />
       <button id="btn-clear-search">✕</button>
     </div>
 
@@ -321,6 +321,7 @@ td.truncate { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white
 
     <div class="batch-bar" id="batch-bar" style="display:none">
       <span id="selected-count">已选 0 项</span>
+      <button id="btn-batch-inventory" class="btn-sm btn-primary">批量盘点</button>
       <button id="btn-batch-edit" class="btn-sm btn-primary">批量编辑</button>
       <button id="btn-deselect" class="btn-sm">取消</button>
     </div>
@@ -512,15 +513,32 @@ function populateFilters() {
 }
 
 function applyFilter() {
-  const q = searchInput.value.trim().toLowerCase();
+  const q = searchInput.value.trim();
   const dept = filterDept.value;
   const status = filterStatus.value;
+
+  // Detect code range pattern e.g. "20191000-20192000"
+  const rangeMatch = q.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+
   filtered = assets.filter(a => {
     if (dept && a['部门'] !== dept) return false;
     if (status && a['状态'] !== status) return false;
     if (q) {
-      const hay = [a['设备编号'], a['设备名称'], a['存放地点'], a['使用人'], a['型号']].join(' ').toLowerCase();
-      if (!hay.includes(q)) return false;
+      if (rangeMatch) {
+        const lo = rangeMatch[1], hi = rangeMatch[2];
+        const code = (a['设备编号'] || '').trim();
+        // Numeric comparison if both are numeric, else lexicographic
+        const numCode = Number(code), numLo = Number(lo), numHi = Number(hi);
+        if (!isNaN(numCode) && !isNaN(numLo) && !isNaN(numHi)) {
+          if (numCode < numLo || numCode > numHi) return false;
+        } else {
+          if (code < lo || code > hi) return false;
+        }
+      } else {
+        const ql = q.toLowerCase();
+        const hay = [a['设备编号'], a['设备名称'], a['存放地点'], a['使用人'], a['型号']].join(' ').toLowerCase();
+        if (!hay.includes(ql)) return false;
+      }
     }
     return true;
   });
@@ -550,7 +568,10 @@ function renderTable() {
       <td class="truncate" title="${a['存放地点']}">${a['存放地点']}</td>
       <td>${a['使用人']}</td>
       <td>${badge}</td>
-      <td><button class="btn-edit" data-id="${a._id}">编辑</button></td>
+      <td>
+        <button class="btn-edit" data-id="${a._id}">编辑</button>
+        <button class="btn-inventory" data-id="${a._id}" style="border:none;background:none;color:#137333;cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px;">盘点</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -567,6 +588,11 @@ function renderTable() {
   // edit button events
   tableBody.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => openEditModal([+e.target.dataset.id]));
+  });
+
+  // inventory button events
+  tableBody.querySelectorAll('.btn-inventory').forEach(btn => {
+    btn.addEventListener('click', e => openInventoryModal([+e.target.dataset.id]));
   });
 
   checkAll.checked = filtered.length > 0 && filtered.every(a => selected.has(a._id));
@@ -607,6 +633,77 @@ document.getElementById('btn-batch-edit').addEventListener('click', () => {
   openEditModal([...selected]);
 });
 
+document.getElementById('btn-batch-inventory').addEventListener('click', () => {
+  openInventoryModal([...selected]);
+});
+
+// ---- Inventory Modal ----
+const INVENTORY_STATUSES = ['账实相符', '盘亏', '盘盈', '损坏', '借出', '已转移'];
+
+function openInventoryModal(ids) {
+  const isBatch = ids.length > 1;
+  const first = assets.find(a => a._id === ids[0]);
+  modalTitle.textContent = isBatch
+    ? `批量盘点 (${ids.length} 项)`
+    : `盘点 — ${first['设备编号']} ${first['设备名称'] || ''}`;
+
+  const opts = INVENTORY_STATUSES.map(s =>
+    `<option value="${s}" ${!isBatch && first['状态'] === s ? 'selected' : ''}>${s}</option>`
+  ).join('');
+
+  modalBody.innerHTML = `
+    <div class="form-group">
+      <label>资产状况</label>
+      <select id="inventory-status">
+        ${isBatch ? '<option value="">— 请选择 —</option>' : ''}
+        ${opts}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>理由（可选）</label>
+      <input type="text" id="inventory-reason" value="${!isBatch ? (first['理由'] || '') : ''}" placeholder="${isBatch ? '留空则不修改' : ''}" />
+    </div>`;
+
+  modalOverlay.style.display = 'flex';
+
+  document.getElementById('modal-save').onclick = () => saveInventory(ids, isBatch);
+  document.getElementById('modal-cancel').onclick = closeModal;
+  document.getElementById('modal-close').onclick = closeModal;
+}
+
+function saveInventory(ids, isBatch) {
+  const statusVal = document.getElementById('inventory-status').value.trim();
+  const reasonVal = document.getElementById('inventory-reason').value.trim();
+
+  if (!statusVal) { alert('请选择资产状况'); return; }
+
+  const changes = { '状态': statusVal };
+  if (!isBatch || reasonVal !== '') changes['理由'] = reasonVal;
+
+  const snapshots = [];
+  ids.forEach(id => {
+    const asset = assets.find(a => a._id === id);
+    if (!asset) return;
+    const before = { '状态': asset['状态'], '理由': asset['理由'] };
+    Object.assign(asset, changes);
+    snapshots.push({ id: asset['设备编号'], before });
+  });
+
+  const desc = ids.length > 1
+    ? `批量盘点 ${ids.length} 条记录 → ${statusVal}`
+    : `盘点设备 ${snapshots[0]?.id} → ${statusVal}`;
+  const detail = ids.length === 1
+    ? `状态: ${snapshots[0].before['状态'] || '—'} → ${statusVal}${reasonVal ? '；理由: ' + reasonVal : ''}`
+    : `状态 → ${statusVal}${reasonVal ? '；理由: ' + reasonVal : ''}`;
+
+  addHistory(desc, detail);
+  selected.clear();
+  updateBatchBar();
+  applyFilter();
+  saveToStorage();
+  closeModal();
+}
+
 // ---- Edit Modal ----
 function openEditModal(ids) {
   const isBatch = ids.length > 1;
@@ -630,7 +727,7 @@ function openEditModal(ids) {
     const val = isBatch ? '' : (first[f] || '');
     const placeholder = isBatch ? '留空则不修改' : '';
     if (f === '状态') {
-      const opts = ['账实相符', '盘亏', '盘盈', '损坏', '借出'].map(o =>
+      const opts = ['账实相符', '盘亏', '盘盈', '损坏', '借出', '已转移'].map(o =>
         `<option value="${o}" ${!isBatch && val === o ? 'selected' : ''}>${o}</option>`
       ).join('');
       modalBody.innerHTML += `<div class="form-group">
