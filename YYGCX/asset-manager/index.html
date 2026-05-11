@@ -43,6 +43,11 @@ body {
   cursor: pointer;
 }
 .btn-icon:hover { background: rgba(255,255,255,0.35); }
+.btn-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.btn-icon:disabled:hover { background: rgba(255,255,255,0.2); }
 
 /* Search */
 .search-bar {
@@ -300,6 +305,7 @@ td.truncate { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white
         <span id="current-file-label" class="file-label"></span>
       </div>
       <div class="topbar-actions">
+        <button class="btn-icon" id="btn-undo" title="没有可撤销的操作" disabled>↩</button>
         <button class="btn-icon" id="btn-history" title="历史记录">🕐</button>
         <button class="btn-icon" id="btn-export" title="导出">⬇️</button>
         <label class="btn-icon" title="导入">
@@ -408,6 +414,7 @@ let filtered = [];     // after search/filter
 let selected = new Set();
 let history = JSON.parse(localStorage.getItem('asset_history') || '[]');
 let currentFileName = localStorage.getItem('asset_filename') || '';
+let undoStack = [];    // undo history: [{desc, snapshots: [{id, before, after}]}]
 
 // ---- Persist / Restore ----
 function saveToStorage() {
@@ -686,16 +693,18 @@ function saveInventory(ids, isBatch) {
     if (!asset) return;
     const before = { '状态': asset['状态'], '理由': asset['理由'] };
     Object.assign(asset, changes);
-    snapshots.push({ id: asset['设备编号'], before });
+    const after = { '状态': asset['状态'], '理由': asset['理由'] };
+    snapshots.push({ id, before, after });
   });
 
   const desc = ids.length > 1
     ? `批量盘点 ${ids.length} 条记录 → ${statusVal}`
-    : `盘点设备 ${snapshots[0]?.id} → ${statusVal}`;
+    : `盘点设备 ${assets.find(a => a._id === ids[0])?.['设备编号']} → ${statusVal}`;
   const detail = ids.length === 1
     ? `状态: ${snapshots[0].before['状态'] || '—'} → ${statusVal}${reasonVal ? '；理由: ' + reasonVal : ''}`
     : `状态 → ${statusVal}${reasonVal ? '；理由: ' + reasonVal : ''}`;
 
+  pushUndo(desc, snapshots);
   addHistory(desc, detail);
   selected.clear();
   updateBatchBar();
@@ -775,17 +784,18 @@ function saveEdit(ids, isBatch) {
     const before = {};
     Object.keys(changes).forEach(f => { before[f] = asset[f]; });
     Object.assign(asset, changes);
-    snapshots.push({ id: asset['设备编号'], before, after: { ...changes } });
+    snapshots.push({ id, before, after: { ...changes } });
   });
 
   const desc = ids.length > 1
     ? `批量修改 ${ids.length} 条记录`
-    : `修改设备 ${snapshots[0]?.id}`;
+    : `修改设备 ${assets.find(a => a._id === ids[0])?.['设备编号']}`;
   const detail = Object.keys(changes).map(f => {
     if (ids.length === 1) return `${f}: ${snapshots[0].before[f]} → ${changes[f]}`;
     return `${f} → ${changes[f]}`;
   }).join('；');
 
+  pushUndo(desc, snapshots);
   addHistory(desc, detail);
   selected.clear();
   updateBatchBar();
@@ -794,7 +804,42 @@ function saveEdit(ids, isBatch) {
   closeModal();
 }
 
-// ---- History ----
+// ---- Undo ----
+function pushUndo(desc, snapshots) {
+  undoStack.push({ desc, snapshots });
+  if (undoStack.length > 50) undoStack.shift(); // 最多保留 50 步
+  updateUndoBtn();
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('btn-undo');
+  if (!btn) return;
+  if (undoStack.length > 0) {
+    btn.removeAttribute('disabled');
+    btn.title = `撤销：${undoStack[undoStack.length - 1].desc}`;
+  } else {
+    btn.setAttribute('disabled', 'disabled');
+    btn.title = '没有可撤销的操作';
+  }
+}
+
+function doUndo() {
+  if (undoStack.length === 0) return;
+  const { desc, snapshots } = undoStack.pop();
+  snapshots.forEach(({ id, before }) => {
+    const asset = assets.find(a => a._id === id);
+    if (!asset) return;
+    Object.assign(asset, before);
+  });
+  saveToStorage();
+  applyFilter();
+  renderTable();
+  updateUndoBtn();
+  // 在历史记录中追加一条撤销记录
+  addHistory(`↩ 撤销：${desc}`, `已将 ${snapshots.length} 条记录恢复到修改前状态`);
+}
+
+
 function addHistory(desc, detail) {
   const entry = {
     time: new Date().toLocaleString('zh-CN'),
@@ -827,6 +872,7 @@ document.getElementById('btn-history').addEventListener('click', () => {
 document.getElementById('history-close').addEventListener('click', () => {
   historyPanel.style.display = 'none';
 });
+document.getElementById('btn-undo').addEventListener('click', doUndo);
 
 // ---- Init ----
 tableWrap.style.display = 'none';
