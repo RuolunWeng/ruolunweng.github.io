@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Binaurale WEB</title>
+</head>
+
+<body>
+    <h1>
+ 		基于Ambisonic算法的3D声音平台(网页版耳机试听平台)
+    </h1>
+    <p>
+        Headphone test...  Allen<br> 请佩戴耳机，选择On->Play播放音频<br>Azimuth控制水平面位置，6.28为一圈360度，0/6.28为正前方<br>Elevation控制竖直面定位，0位于水平面，1.5位于顶部，-1.5位于底部<br>Distance控制声源的远近。1为初始值，越大声源越远。
+    </p><br></br>
+    <center>
+    <select id="conv" name="conv">
+          <option value="convolver">On</option>
+          <option value="off" selected>Off</option>
+    </select>
+    <button id="mute">Mute</button> <br>
+    <button id ="play"> Play </button>
+    <button id ="stop"> Stop </button>
+    <button id ="pause"> Pause </button><br></br>
+    
+    <input type="range" min="0" max="31.4" value="0" id="azimuth" step="0.001" oninput="faustParametre.azimuth(this)"><br>
+    <label id="azimuthOut">Azimuth</label> <br>
+    <input type="range" min="-1.57" max="1.57" value="0" id="elevation" step="0.001" oninput="faustParametre.elevation(this)"><br>
+    <label id="elevationOut">Elevation</label> <br>
+    <input type="range" min="0" max="3" value="1" id="distance" step="0.001" oninput="faustParametre.distance(this)"><br>
+    <label id="distanceOut">Distance</label> <br>
+ 	</center>
+
+
+ 	
+    
+    <script src="../js/buffer-loader3.js"></script>
+    <script src="../js/buffer-loader.js"></script>
+    <script src="../js/binaural.js"></script>
+    <script src="../js/player.js"></script>
+    <script src="../js/607.js"></script>
+
+
+</body>
+
+</html>

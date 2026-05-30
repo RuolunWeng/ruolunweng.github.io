@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"></meta>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700|Roboto:300,400" rel="stylesheet"></link>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/FaustSvgStyle.css"> </link>
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+    <center>
+        <H1> Faust Web App </H1>
+
+        <!--
+                <div id="filedrag">
+                    Loading JavaScript/WebAssembly ressources...
+                </div>
+                -->
+
+        <div id="versionInfo">
+            <H2> Loading JavaScript ressources... </H2>
+        </div>
+        <br><br>
+        <form id="upload" action="CompilerResponse" method="POST" enctype="multipart/form-data">
+            <input type="hidden" id="MAX_FILE_SIZE" name="MAX_FILE_SIZE" value="5000000" />
+        </form>
+
+        <button class="loadfile">Load Faust File</button>
+        <input type="file" id="file-input" style="display:none" />
+        <button onclick="window.location.reload();">Stop</button>
+
+    </center>
+    <!---
+            <center> <H1 > Testing the embedded dynamic Faust compiler ASM-worker API</H1> </center>
+
+            <div id="filedrag">
+                Loading JavaScript/WebAssembly ressources...
+            </div>
+
+            <p>buffer size</p>
+            <form method="POST" name="menu" >
+                <select id="selectedBuffer" name="selectedBuffer"
+                    onChange="setBufferSize(this.form.selectedBuffer)">
+                    <option value = 256> 256 </option>
+                    <option value = 512> 512 </option>
+                    <option selected value = 1024> 1024 </option>
+                    <option value = 2048> 2048 </option>
+                    <option value = 4096> 4096 </option>
+                    <option value = 8192> 8192 </option>
+                </select>
+            </form>
+            <p/>
+
+            <form id="upload" action="CompilerResponse" method="POST" enctype="multipart/form-data">
+                <input type="hidden" id="MAX_FILE_SIZE" name="MAX_FILE_SIZE" value="5000000" />
+            </form>
+
+            <button class="initfile" onClick="initKisana()">Load Kisana.dsp</button>
+            <button class="loadfile">Load Faust File</button>
+            <input type="file" id="file-input" style="display:none"/>
+            <h3>Contents of the Faust file:</h3>
+            <pre id="file-content"></pre>
+            --->
+
+    <script src="js/jsscripts.js"></script>
+    <script src="js/libfaustworker.js"></script>
+    <script src="js/WebMIDIAPI.js"></script>
+    <script src="js/webaudio-asm-worker-wrapper.js"></script>
+    <script src="js/AccInterface.js"></script>
+    <script src="js/Module.js"></script>
+
+    <script src="js/FaustLive.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+#svgCanvas{
+	position:absolute; 
+	width:100%; 
+	height:100%; 
+	top:0; 
+	left:0; 
+	/*z-index:-1;*/
+}
+
+#exportButton>a {
+    box-shadow: 0 0 10px grey;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    display: block;
+    cursor: pointer;
+}
+#exportButton>a:hover{
+    box-shadow: 0 0 10px black;
+}
+
+#subtitleButton{
+	font-size:11px;
+}
