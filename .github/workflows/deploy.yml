@@ -21,17 +21,23 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout all files
+      - name: Checkout
         uses: actions/checkout@v4
-        # Do NOT use sparse-checkout parameter at all
-        # This will checkout all files by default
         
-      - name: List files to verify checkout
+      - name: Disable sparse checkout and fetch all files
         run: |
+          git sparse-checkout disable
+          git checkout master
           echo "=== Root directory ==="
-          ls -la
-          echo "=== Faustide directory ==="
-          ls -la faustide/ | head -20
+          ls -la | head -20
+          echo "=== Checking faustide directory ==="
+          if [ -d "faustide" ]; then
+            echo "faustide directory exists!"
+            ls -la faustide/ | head -20
+          else
+            echo "ERROR: faustide directory NOT found!"
+            exit 1
+          fi
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
