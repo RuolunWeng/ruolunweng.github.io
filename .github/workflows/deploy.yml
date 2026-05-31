@@ -21,11 +21,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout all files (disable sparse checkout)
+      - name: Checkout all files
         uses: actions/checkout@v4
-        with:
-          # Disable sparse checkout to get ALL files
-          sparse-checkout: ''
+        # Do NOT use sparse-checkout parameter at all
+        # This will checkout all files by default
+        
+      - name: List files to verify checkout
+        run: |
+          echo "=== Root directory ==="
+          ls -la
+          echo "=== Faustide directory ==="
+          ls -la faustide/ | head -20
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
