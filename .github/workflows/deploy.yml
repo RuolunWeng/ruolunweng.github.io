@@ -21,8 +21,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout all files (disable sparse checkout)
         uses: actions/checkout@v4
+        with:
+          # Disable sparse checkout to get ALL files
+          sparse-checkout: ''
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
