@@ -467,6 +467,7 @@ class NewPiecePanel {
     var canvas = new _SHCUICanvas__WEBPACK_IMPORTED_MODULE_6__/* .SHCUICanvas */ .B({
       container: canvasWrap,
       getCode: () => this.dspCode,
+      getDspJson: this.opts.getDspJson,
       onChange: (el, x, y, w, h) => {
         var _propPanel;
         setCode(this.editor.upsertSHCUI(this.dspCode, el.paramPath, el));
@@ -600,7 +601,8 @@ class NewPiecePanel {
     motionPanel = new _MotionPanel__WEBPACK_IMPORTED_MODULE_8__/* .MotionPanel */ .L({
       container: motionWrap,
       getCode,
-      setCode
+      setCode,
+      getDspJson: this.opts.getDspJson
     });
     cuePanel = new _CuePanel__WEBPACK_IMPORTED_MODULE_9__/* .CuePanel */ .E({
       container: cueWrap,
@@ -610,7 +612,8 @@ class NewPiecePanel {
     showNamePanel = new _ShowNamePanel__WEBPACK_IMPORTED_MODULE_10__/* .ShowNamePanel */ .$({
       container: showNameWrap,
       getCode,
-      setCode
+      setCode,
+      getDspJson: this.opts.getDspJson
     });
     motionPanel.parseParamsFromCode(this.dspCode);
     this.appendNavButtons(() => this.showStep(2), () => this.showStep(4), 'Next →');
@@ -799,4 +802,4 @@ class NewPiecePanel {
 /***/ }
 
 }]);
-//# sourceMappingURL=1b303270bc93433b004f.js.map
+//# sourceMappingURL=bfcb1b98b083216104f8.js.map

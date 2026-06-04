@@ -15,11 +15,62 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 
 class SHCUIParser {
+  maskComments(dspCode) {
+    var masked = '';
+    var state = 'code';
+    var escaped = false;
+    for (var i = 0; i < dspCode.length; i++) {
+      var ch = dspCode[i];
+      var next = dspCode[i + 1];
+      if (state === 'lineComment') {
+        if (ch === '\n') {
+          state = 'code';
+          masked += ch;
+        } else {
+          masked += ' ';
+        }
+        continue;
+      }
+      if (state === 'blockComment') {
+        if (ch === '*' && next === '/') {
+          masked += '  ';
+          i++;
+          state = 'code';
+        } else {
+          masked += ch === '\n' ? ch : ' ';
+        }
+        continue;
+      }
+      if (state === 'string') {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          state = 'code';
+        }
+        continue;
+      }
+      if (ch === '/' && next === '/') {
+        masked += '  ';
+        i++;
+        state = 'lineComment';
+      } else if (ch === '/' && next === '*') {
+        masked += '  ';
+        i++;
+        state = 'blockComment';
+      } else {
+        masked += ch;
+        if (ch === '"') state = 'string';
+      }
+    }
+    return masked;
+  }
   parse(dspCode) {
     var elements = [];
     var errors = [];
-    // Strip comments before parsing so metadata in comments is ignored
-    var stripped = dspCode.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    var stripped = this.maskComments(dspCode);
     var regex = /"([^"]*\[SHCUI:[^\]]*\][^"]*)"/g;
     var match;
     while ((match = regex.exec(stripped)) !== null) {
@@ -107,8 +158,7 @@ class SHCUIParser {
   }
   parseCueManager(dspCode) {
     var entries = [];
-    // Strip comments before parsing
-    var stripped = dspCode.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    var stripped = this.maskComments(dspCode);
 
     // Match inline label metadata: [touchCueManager: {1:'tip1'; 2:'tip2'; ...}]
     // or declare format: declare touchCueManager "{1:tip1; 2:tip2; ...}";
@@ -154,14 +204,68 @@ class SHCUIParser {
 /* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(47075);
 
 class MotionParser {
+  maskComments(dspCode) {
+    var masked = '';
+    var state = 'code';
+    var escaped = false;
+    for (var i = 0; i < dspCode.length; i++) {
+      var ch = dspCode[i];
+      var next = dspCode[i + 1];
+      if (state === 'lineComment') {
+        if (ch === '\n') {
+          state = 'code';
+          masked += ch;
+        } else {
+          masked += ' ';
+        }
+        continue;
+      }
+      if (state === 'blockComment') {
+        if (ch === '*' && next === '/') {
+          masked += '  ';
+          i++;
+          state = 'code';
+        } else {
+          masked += ch === '\n' ? ch : ' ';
+        }
+        continue;
+      }
+      if (state === 'string') {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          state = 'code';
+        }
+        continue;
+      }
+      if (ch === '/' && next === '/') {
+        masked += '  ';
+        i++;
+        state = 'lineComment';
+      } else if (ch === '/' && next === '*') {
+        masked += '  ';
+        i++;
+        state = 'blockComment';
+      } else {
+        masked += ch;
+        if (ch === '"') state = 'string';
+      }
+    }
+    return masked;
+  }
   parse(dspCode) {
     var mappings = [];
     var errors = [];
+    var stripped = this.maskComments(dspCode);
     var regex = /"([^"]*\[(?:acc|gyr):[^\]]*\][^"]*)"/g;
     var match;
-    while ((match = regex.exec(dspCode)) !== null) {
+    while ((match = regex.exec(stripped)) !== null) {
       var fullLabel = match[1];
-      var paramPath = fullLabel.split('[')[0].trim();
+      var metaStart = fullLabel.search(/\[(?:SHCUI|acc|gyr|motion|showName|style|unit|hidden|tooltip|scale|integer|log|lin|knob|led|numerical|menu|radio|type|osc|midi|screencolor)(?:\s|:)[^\]]*\]/);
+      var paramPath = metaStart !== -1 ? fullLabel.slice(0, metaStart).trimEnd() : fullLabel;
       var metaRegex = /\[(acc|gyr):\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*\]/g;
       var metaMatch = void 0;
       while ((metaMatch = metaRegex.exec(fullLabel)) !== null) {
@@ -766,11 +870,13 @@ class FileNameValidator {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   L: () => (/* binding */ MotionPanel)
 /* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(54705);
-/* harmony import */ var _DSPMetadataEditor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(66328);
-/* harmony import */ var _MotionParser__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22858);
-/* harmony import */ var _parseParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(95526);
-/* harmony import */ var _parameterFiltering__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(67804);
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(47075);
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(54705);
+/* harmony import */ var _DSPMetadataEditor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66328);
+/* harmony import */ var _MotionParser__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(22858);
+/* harmony import */ var _parseParams__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(95526);
+/* harmony import */ var _parameterFiltering__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(67804);
+
 
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -1044,14 +1150,14 @@ var MOTION_LIB_PARAMS = [
 }];
 class MotionPanel {
   constructor(options) {
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "container", void 0);
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "getCode", void 0);
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "setCode", void 0);
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "getDspJson", void 0);
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "container", void 0);
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "getCode", void 0);
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "setCode", void 0);
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "getDspJson", void 0);
     // Task 3.4: Get compiled DSP JSON
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "editor", new _DSPMetadataEditor__WEBPACK_IMPORTED_MODULE_1__/* .DSPMetadataEditor */ .K());
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "motionParser", new _MotionParser__WEBPACK_IMPORTED_MODULE_2__/* .MotionParser */ .E());
-    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "params", []);
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "editor", new _DSPMetadataEditor__WEBPACK_IMPORTED_MODULE_2__/* .DSPMetadataEditor */ .K());
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "motionParser", new _MotionParser__WEBPACK_IMPORTED_MODULE_3__/* .MotionParser */ .E());
+    (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(this, "params", []);
     this.container = options.container;
     this.getCode = options.getCode;
     this.setCode = options.setCode;
@@ -1063,7 +1169,7 @@ class MotionPanel {
     this.render();
   }
   parseParamsFromCode(code) {
-    var parsed = (0,_parseParams__WEBPACK_IMPORTED_MODULE_3__/* .parseParams */ .S)(code);
+    var parsed = (0,_parseParams__WEBPACK_IMPORTED_MODULE_4__/* .parseParams */ .S)(code);
     var params = parsed.map((_ref, id) => {
       var paramPath = _ref.paramPath,
         fullLabel = _ref.fullLabel;
@@ -1099,9 +1205,9 @@ class MotionPanel {
     console.log('[MotionPanel] dspJson:', dspJson);
     console.log('[MotionPanel] Total params before filtering:', this.params.length);
     console.log('[MotionPanel] FaustPiece param addresses:', this.params.map(p => p.address));
-    var _filterUsedParams = (0,_parameterFiltering__WEBPACK_IMPORTED_MODULE_4__/* .filterUsedParams */ .q)(this.params, dspJson),
-      filteredParams = _filterUsedParams.usedParams,
-      hiddenCount = _filterUsedParams.hiddenCount;
+    var _effectiveParams = (0,_parameterFiltering__WEBPACK_IMPORTED_MODULE_5__/* .effectiveParams */ .K6)(this.params, dspJson),
+      filteredParams = _effectiveParams.params,
+      hiddenCount = _effectiveParams.hiddenCount;
     console.log('[MotionPanel] Params after filtering:', filteredParams.length);
     console.log('[MotionPanel] Hidden count:', hiddenCount);
     console.log('[MotionPanel] Filtered param addresses:', filteredParams.map(p => p.address));
@@ -1167,7 +1273,23 @@ class MotionPanel {
       try {
         var _loop = function _loop() {
           var param = _step2.value;
-          var existing = parsed.data.filter(m => m.paramPath === param.address);
+          var writePath = param.sourceAddress || param.address;
+          var existing = parsed.data.filter(m => m.paramPath === writePath);
+          var _iterator3 = _createForOfIteratorHelper(_this.mappingsFromParamMeta(param)),
+            _step3;
+          try {
+            var _loop2 = function _loop2() {
+              var mapping = _step3.value;
+              if (!existing.some(m => m.sensor === mapping.sensor)) existing.push(mapping);
+            };
+            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+              _loop2();
+            }
+          } catch (err) {
+            _iterator3.e(err);
+          } finally {
+            _iterator3.f();
+          }
           _this.container.appendChild(_this.makeAccGyrRow(param, existing));
         };
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
@@ -1180,9 +1302,52 @@ class MotionPanel {
       }
     }
   }
+  mappingsFromParamMeta(param) {
+    var mappings = [];
+    var _iterator4 = _createForOfIteratorHelper([['acc', param.accMeta], ['gyr', param.gyrMeta]]),
+      _step4;
+    try {
+      for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+        var _step4$value = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(_step4.value, 2),
+          sensor = _step4$value[0],
+          meta = _step4$value[1];
+        if (!meta) continue;
+        var parts = meta.trim().split(/\s+/);
+        if (parts.length < 5) continue;
+        var _parts = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(parts, 5),
+          axisStr = _parts[0],
+          curveStr = _parts[1],
+          aminStr = _parts[2],
+          amidStr = _parts[3],
+          amaxStr = _parts[4];
+        var axis = parseInt(axisStr);
+        var curve = parseInt(curveStr);
+        var amin = parseFloat(aminStr);
+        var amid = parseFloat(amidStr);
+        var amax = parseFloat(amaxStr);
+        if (![0, 1, 2].includes(axis) || ![0, 1, 2].includes(curve) || !Number.isFinite(amin) || !Number.isFinite(amid) || !Number.isFinite(amax)) continue;
+        var writePath = param.sourceAddress || param.address;
+        mappings.push({
+          paramPath: writePath,
+          sensor,
+          axis,
+          curve,
+          amin,
+          amid,
+          amax
+        });
+      }
+    } catch (err) {
+      _iterator4.e(err);
+    } finally {
+      _iterator4.f();
+    }
+    return mappings;
+  }
   makeMotionLinkRow(param) {
     var row = document.createElement('div');
     row.style.cssText = 'padding:5px 10px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:6px;';
+    var writable = param.sourceWritable !== false;
     var label = document.createElement('span');
     label.textContent = param.address.split('/').pop() || param.address;
     label.title = param.address;
@@ -1192,6 +1357,7 @@ class MotionPanel {
     // Dropdown of known motion lib params + "(none)" option
     var sel = document.createElement('select');
     sel.style.cssText = 'flex:1;background:#3c3c3c;color:#ccc;border:1px solid #555;border-radius:3px;padding:2px 4px;font-size:11px;';
+    sel.disabled = !writable;
     var noneOpt = document.createElement('option');
     noneOpt.value = '';
     noneOpt.textContent = '— none —';
@@ -1217,15 +1383,17 @@ class MotionPanel {
     // Preview of the metadata that will be written
     var preview = document.createElement('span');
     var updatePreview = () => {
-      preview.textContent = sel.value ? "[motion: ".concat(sel.value, "]") : '';
+      preview.textContent = writable ? sel.value ? "[motion: ".concat(sel.value, "]") : '' : 'from import/compiled UI - not editable';
     };
-    preview.style.cssText = 'font-family:monospace;font-size:10px;color:#666;flex-shrink:0;';
+    preview.style.cssText = "font-family:monospace;font-size:10px;color:".concat(writable ? '#666' : '#fa4', ";flex-shrink:0;");
     updatePreview();
     sel.addEventListener('change', () => {
+      if (!writable) return;
       updatePreview();
       var val = sel.value;
       var code = this.getCode();
-      var updated = val ? this.editor.upsertMotionLink(code, param.address, val) : this.editor.removeMotionLink(code, param.address);
+      var writePath = param.sourceAddress || param.address;
+      var updated = val ? this.editor.upsertMotionLink(code, writePath, val) : this.editor.removeMotionLink(code, writePath);
       if (updated !== code) this.setCode(updated);
     });
     row.appendChild(sel);
@@ -1235,6 +1403,7 @@ class MotionPanel {
   makeAccGyrRow(param, existing) {
     var wrap = document.createElement('div');
     wrap.style.cssText = 'padding:6px 10px;border-bottom:1px solid #2a2a2a;';
+    var writable = param.sourceWritable !== false;
     var header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
     var label = document.createElement('span');
@@ -1247,19 +1416,26 @@ class MotionPanel {
     rangeInfo.style.cssText = 'color:#666;font-size:10px;';
     header.appendChild(rangeInfo);
     wrap.appendChild(header);
-    var _iterator3 = _createForOfIteratorHelper(existing),
-      _step3;
+    var _iterator5 = _createForOfIteratorHelper(existing),
+      _step5;
     try {
-      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-        var m = _step3.value;
+      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+        var m = _step5.value;
         wrap.appendChild(this.makeMappingDisplay(param, m));
       }
     } catch (err) {
-      _iterator3.e(err);
+      _iterator5.e(err);
     } finally {
-      _iterator3.f();
+      _iterator5.f();
     }
-    wrap.appendChild(this.makeAddMappingForm(param));
+    if (writable) {
+      wrap.appendChild(this.makeAddMappingForm(param));
+    } else {
+      var note = document.createElement('div');
+      note.textContent = 'This parameter comes from imported/compiled UI and cannot be edited because its label is not in the current DSP file.';
+      note.style.cssText = 'color:#fa4;font-size:10px;line-height:1.4;margin-top:3px;';
+      wrap.appendChild(note);
+    }
     return wrap;
   }
   makeMappingDisplay(param, m) {
@@ -1272,9 +1448,17 @@ class MotionPanel {
     var delBtn = document.createElement('button');
     delBtn.textContent = '✕';
     delBtn.style.cssText = 'background:#5a2020;color:#fff;border:none;border-radius:2px;padding:1px 5px;cursor:pointer;font-size:10px;';
+    delBtn.disabled = param.sourceWritable === false;
+    if (delBtn.disabled) {
+      delBtn.title = 'Cannot edit metadata for imported/compiled UI parameters';
+      delBtn.style.opacity = '0.45';
+      delBtn.style.cursor = 'not-allowed';
+    }
     delBtn.addEventListener('click', () => {
+      if (param.sourceWritable === false) return;
       var code = this.getCode();
-      var updated = this.editor.removeMotion(code, param.address, m.sensor);
+      var writePath = param.sourceAddress || param.address;
+      var updated = this.editor.removeMotion(code, writePath, m.sensor);
       if (updated !== code) {
         this.setCode(updated);
         this.render();
@@ -1289,11 +1473,11 @@ class MotionPanel {
     var makeSelect = (options, defaultVal) => {
       var sel = document.createElement('select');
       sel.style.cssText = 'background:#3c3c3c;color:#ccc;border:1px solid #555;border-radius:3px;padding:1px 3px;font-size:11px;';
-      var _iterator4 = _createForOfIteratorHelper(options),
-        _step4;
+      var _iterator6 = _createForOfIteratorHelper(options),
+        _step6;
       try {
-        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var o = _step4.value;
+        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+          var o = _step6.value;
           var opt = document.createElement('option');
           opt.value = o;
           opt.textContent = o;
@@ -1301,9 +1485,9 @@ class MotionPanel {
           sel.appendChild(opt);
         }
       } catch (err) {
-        _iterator4.e(err);
+        _iterator6.e(err);
       } finally {
-        _iterator4.f();
+        _iterator6.f();
       }
       return sel;
     };
@@ -1333,7 +1517,7 @@ class MotionPanel {
         return;
       }
       var mapping = {
-        paramPath: param.address,
+        paramPath: param.sourceAddress || param.address,
         sensor: sensorSel.value,
         axis: parseInt(axisSel.value),
         curve: parseInt(curveSel.value),
@@ -1342,7 +1526,8 @@ class MotionPanel {
         amax
       };
       var code = this.getCode();
-      var updated = this.editor.upsertMotion(code, param.address, mapping);
+      var writePath = param.sourceAddress || param.address;
+      var updated = this.editor.upsertMotion(code, writePath, mapping);
       if (updated !== code) {
         this.setCode(updated);
         this.render();
@@ -1503,9 +1688,9 @@ class ShowNamePanel {
 
     // Task 3.2: Filter parameters to only show used ones
     var dspJson = this.getDspJson ? this.getDspJson() : null;
-    var _filterUsedParams = (0,_parameterFiltering__WEBPACK_IMPORTED_MODULE_3__/* .filterUsedParams */ .q)(this.params, dspJson),
-      filteredParams = _filterUsedParams.usedParams,
-      hiddenCount = _filterUsedParams.hiddenCount;
+    var _effectiveParams = (0,_parameterFiltering__WEBPACK_IMPORTED_MODULE_3__/* .effectiveParams */ .K6)(this.params, dspJson),
+      filteredParams = _effectiveParams.params,
+      hiddenCount = _effectiveParams.hiddenCount;
 
     // Show guidance message if DSP not compiled yet
     if (!dspJson && this.params.length > 0) {
@@ -1574,17 +1759,25 @@ class ShowNamePanel {
   makeParamRow(param) {
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid #2a2a2a;';
+    var writable = param.sourceWritable !== false;
+    var writePath = param.sourceAddress || param.address;
 
     // Checkbox to enable/disable showName
     var checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = !!param.showNameMeta;
     checkbox.style.cssText = 'cursor:pointer;';
+    checkbox.disabled = !writable;
+    if (!writable) {
+      checkbox.title = 'Cannot edit metadata for imported/compiled UI parameters';
+      checkbox.style.cursor = 'not-allowed';
+    }
     checkbox.addEventListener('change', () => {
+      if (!writable) return;
       if (!checkbox.checked) {
         // Remove showName
         var code = this.getCode();
-        var updated = this.editor.removeShowName(code, param.address);
+        var updated = this.editor.removeShowName(code, writePath);
         if (updated !== code) {
           this.setCode(updated);
           param.showNameMeta = undefined;
@@ -1594,7 +1787,7 @@ class ShowNamePanel {
         // Enable with default name (parameter display name)
         var defaultName = param.address.split('/').pop() || param.address;
         var _code = this.getCode();
-        var _updated = this.editor.upsertShowName(_code, param.address, defaultName);
+        var _updated = this.editor.upsertShowName(_code, writePath, defaultName);
         if (_updated !== _code) {
           this.setCode(_updated);
           param.showNameMeta = defaultName;
@@ -1611,6 +1804,13 @@ class ShowNamePanel {
     label.title = "Full path: ".concat(param.address);
     label.style.cssText = 'color:#aaa;font-size:11px;min-width:100px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     row.appendChild(label);
+    if (!writable) {
+      var warning = document.createElement('span');
+      warning.textContent = 'from import/compiled UI - not editable';
+      warning.style.cssText = 'color:#fa4;font-size:10px;flex:1;';
+      row.appendChild(warning);
+      return row;
+    }
 
     // Display name input (only visible when checked)
     if (param.showNameMeta) {
@@ -1633,7 +1833,7 @@ class ShowNamePanel {
           return;
         }
         var code = this.getCode();
-        var updated = this.editor.upsertShowName(code, param.address, val);
+        var updated = this.editor.upsertShowName(code, writePath, val);
         if (updated !== code) {
           this.setCode(updated);
           param.showNameMeta = val;
@@ -2097,6 +2297,7 @@ class SHCUICanvas {
 
     // Extract existing DSP param labels from code (handles all label formats)
     var existingParams = [];
+    var readonlyParams = new Set();
     if (this.getCode) {
       var parsed = (0,_parseParams__WEBPACK_IMPORTED_MODULE_2__/* .parseParams */ .S)(this.getCode());
 
@@ -2110,14 +2311,19 @@ class SHCUICanvas {
         max: 1,
         init: 0
       }));
-      var _filterUsedParams = (0,_parameterFiltering__WEBPACK_IMPORTED_MODULE_3__/* .filterUsedParams */ .q)(paramsWithMeta, dspJson),
-        filteredParams = _filterUsedParams.usedParams;
+      var _effectiveParams = (0,_parameterFiltering__WEBPACK_IMPORTED_MODULE_3__/* .effectiveParams */ .K6)(paramsWithMeta, dspJson),
+        filteredParams = _effectiveParams.params;
       var _iterator4 = _createForOfIteratorHelper(filteredParams),
         _step4;
       try {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var address = _step4.value.address;
-          if (!existingParams.includes(address)) existingParams.push(address);
+          var _step4$value = _step4.value,
+            address = _step4$value.address,
+            sourceAddress = _step4$value.sourceAddress,
+            sourceWritable = _step4$value.sourceWritable;
+          var writePath = sourceAddress || address;
+          if (!existingParams.includes(writePath)) existingParams.push(writePath);
+          if (sourceWritable === false) readonlyParams.add(writePath);
         }
       } catch (err) {
         _iterator4.e(err);
@@ -2175,7 +2381,7 @@ class SHCUICanvas {
           var p = _step6.value;
           var opt = document.createElement('option');
           opt.value = p;
-          opt.textContent = p;
+          opt.textContent = readonlyParams.has(p) ? "".concat(p, " (not editable)") : p;
           datalist.appendChild(opt);
         }
       } catch (err) {
@@ -2196,7 +2402,18 @@ class SHCUICanvas {
     // Hint below input
     var hint = document.createElement('div');
     hint.style.cssText = 'font-size:10px;color:#555;';
-    hint.textContent = existingParams.length > 0 ? "".concat(existingParams.length, " param(s) found in DSP \u2014 or type a new name") : 'No params found in DSP — type a new param name';
+    var updateParamHint = () => {
+      var selected = pathInput.value.trim();
+      if (readonlyParams.has(selected)) {
+        hint.style.color = '#fa4';
+        hint.textContent = 'This parameter comes from imported/compiled UI and cannot be edited because its label is not in the current DSP file.';
+      } else {
+        hint.style.color = '#555';
+        hint.textContent = existingParams.length > 0 ? "".concat(existingParams.length, " param(s) found in DSP \u2014 or type a new name") : 'No params found in DSP — type a new param name';
+      }
+    };
+    pathInput.addEventListener('input', updateParamHint);
+    updateParamHint();
     paramWrap.appendChild(pathInput);
     paramWrap.appendChild(hint);
     var paramRow = document.createElement('div');
@@ -2275,6 +2492,10 @@ class SHCUICanvas {
         errMsg.textContent = 'Param path is required';
         return;
       }
+      if (readonlyParams.has(path)) {
+        errMsg.textContent = 'This imported/compiled UI parameter is not editable in the current DSP file.';
+        return;
+      }
       var tab = tabInput.value.trim() || 'main';
       var newEl = {
         paramPath: path,
@@ -2344,15 +2565,67 @@ class DSPMetadataEditor {
     (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "shcuiParser", new _SHCUIParser__WEBPACK_IMPORTED_MODULE_1__/* .SHCUIParser */ .k());
     (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(this, "motionParser", new _MotionParser__WEBPACK_IMPORTED_MODULE_2__/* .MotionParser */ .E());
   }
+  maskComments(dspCode) {
+    var masked = '';
+    var state = 'code';
+    var escaped = false;
+    for (var i = 0; i < dspCode.length; i++) {
+      var ch = dspCode[i];
+      var next = dspCode[i + 1];
+      if (state === 'lineComment') {
+        if (ch === '\n') {
+          state = 'code';
+          masked += ch;
+        } else {
+          masked += ' ';
+        }
+        continue;
+      }
+      if (state === 'blockComment') {
+        if (ch === '*' && next === '/') {
+          masked += '  ';
+          i++;
+          state = 'code';
+        } else {
+          masked += ch === '\n' ? ch : ' ';
+        }
+        continue;
+      }
+      if (state === 'string') {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          state = 'code';
+        }
+        continue;
+      }
+      if (ch === '/' && next === '/') {
+        masked += '  ';
+        i++;
+        state = 'lineComment';
+      } else if (ch === '/' && next === '*') {
+        masked += '  ';
+        i++;
+        state = 'blockComment';
+      } else {
+        masked += ch;
+        if (ch === '"') state = 'string';
+      }
+    }
+    return masked;
+  }
   findLabelIndex(dspCode, paramPath) {
     var escaped = paramPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     var regex = new RegExp("\"(".concat(escaped, "[^\"]*)\""), 'g');
-    var match = regex.exec(dspCode);
+    var match = regex.exec(this.maskComments(dspCode));
     if (!match) return null;
     return {
       start: match.index + 1,
       end: match.index + match[0].length - 1,
-      label: match[1]
+      label: dspCode.slice(match.index + 1, match.index + match[0].length - 1)
     };
   }
   upsertMeta(label, tagName, newValue) {
@@ -2406,13 +2679,13 @@ class DSPMetadataEditor {
 
     // Try to find the trigCue param label and add/update inline metadata there
     var trigCueLabelRegex = /"([^"]*\[SHCUI:[^\]]*trigCue[^\]]*\][^"]*)"/;
-    var match = dspCode.match(trigCueLabelRegex);
+    var match = trigCueLabelRegex.exec(this.maskComments(dspCode));
     if (match) {
-      var oldLabel = match[1];
+      var oldLabel = dspCode.slice(match.index + 1, match.index + match[0].length - 1);
       // Remove existing touchCueManager metadata if present
       var cleanLabel = oldLabel.replace(/\s*\[touchCueManager:[^\]]*\]/g, '').trimEnd();
       var newLabel = cleanLabel + ' ' + newMeta;
-      return dspCode.replace(match[0], "\"".concat(newLabel, "\""));
+      return dspCode.slice(0, match.index) + "\"".concat(newLabel, "\"") + dspCode.slice(match.index + match[0].length);
     }
 
     // Fallback: use declare statement (legacy / no trigCue param found)
@@ -2430,9 +2703,15 @@ class DSPMetadataEditor {
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   q: () => (/* binding */ filterUsedParams)
+/* harmony export */   K6: () => (/* binding */ effectiveParams)
 /* harmony export */ });
-/* unused harmony export extractUsedParamsFromJson */
+/* unused harmony exports extractUsedParamsFromJson, paramsFromDspJson, filterUsedParams */
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(54705);
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(47075);
+
+
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
@@ -2520,6 +2799,141 @@ function extractUsedParamsFromJson(dspJson) {
   }
   collectParams(((_parsedJson = parsedJson) === null || _parsedJson === void 0 ? void 0 : _parsedJson.ui) || []);
   return usedParams;
+}
+
+/**
+ * Enumerate runtime DSP parameters directly from compiled Faust JSON.
+ * This is the authoritative list after Faust has expanded imports and
+ * discarded controls that are not part of the compiled DSP UI.
+ */
+function paramsFromDspJson(dspJson) {
+  var _parsedJson2;
+  if (!dspJson) return [];
+  var parsedJson = dspJson;
+  if (typeof dspJson === 'string') {
+    try {
+      parsedJson = JSON.parse(dspJson);
+    } catch (e) {
+      console.error('[paramsFromDspJson] Failed to parse JSON:', e);
+      return [];
+    }
+  }
+  var params = [];
+  var fallbackId = 0;
+  function getMetaValue(meta, key) {
+    if (!meta) return undefined;
+    var _iterator2 = _createForOfIteratorHelper(meta),
+      _step2;
+    try {
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var entry = _step2.value;
+        if (key in entry) return entry[key];
+      }
+    } catch (err) {
+      _iterator2.e(err);
+    } finally {
+      _iterator2.f();
+    }
+    return undefined;
+  }
+  function collectParams(items) {
+    var _iterator3 = _createForOfIteratorHelper(items || []),
+      _step3;
+    try {
+      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+        var item = _step3.value;
+        if (!item || typeof item !== 'object') continue;
+        if (item.items) {
+          collectParams(item.items);
+          continue;
+        }
+        var type = item.type;
+        var isControl = ['hslider', 'vslider', 'nentry', 'button', 'checkbox', 'hbargraph', 'vbargraph'].includes(type);
+        if (isControl && item.address) {
+          var _item$index, _item$min, _item$max, _item$init;
+          params.push({
+            id: (_item$index = item.index) !== null && _item$index !== void 0 ? _item$index : fallbackId,
+            address: item.address,
+            min: (_item$min = item.min) !== null && _item$min !== void 0 ? _item$min : 0,
+            max: (_item$max = item.max) !== null && _item$max !== void 0 ? _item$max : 1,
+            init: (_item$init = item.init) !== null && _item$init !== void 0 ? _item$init : 0,
+            accMeta: getMetaValue(item.meta, 'acc'),
+            gyrMeta: getMetaValue(item.meta, 'gyr'),
+            motionMeta: getMetaValue(item.meta, 'motion'),
+            showNameMeta: getMetaValue(item.meta, 'showName')
+          });
+          fallbackId++;
+        }
+      }
+    } catch (err) {
+      _iterator3.e(err);
+    } finally {
+      _iterator3.f();
+    }
+  }
+  collectParams(((_parsedJson2 = parsedJson) === null || _parsedJson2 === void 0 ? void 0 : _parsedJson2.ui) || []);
+  return params;
+}
+
+/**
+ * Prefer compiled Faust JSON when present; fall back to source-derived params
+ * only before compilation has produced an authoritative UI descriptor.
+ */
+function effectiveParams(sourceParams, dspJson) {
+  var compiledParams = paramsFromDspJson(dspJson);
+  if (compiledParams.length > 0) {
+    var sourceByPath = new Map(sourceParams.map(p => [normalizeParamPath(p.address), p.address]));
+    var findSourceAddress = address => {
+      var normalized = normalizeParamPath(address);
+      var exact = sourceByPath.get(normalized);
+      if (exact) return exact;
+      var _iterator4 = _createForOfIteratorHelper(sourceByPath.entries()),
+        _step4;
+      try {
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var _step4$value = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(_step4.value, 2),
+            sourcePath = _step4$value[0],
+            sourceAddress = _step4$value[1];
+          if (normalized.endsWith("/".concat(sourcePath)) || sourcePath.endsWith("/".concat(normalized))) {
+            return sourceAddress;
+          }
+        }
+      } catch (err) {
+        _iterator4.e(err);
+      } finally {
+        _iterator4.f();
+      }
+      var lastSegment = normalized.split('/').pop();
+      var lastSegmentMatches = Array.from(sourceByPath.entries()).filter(_ref => {
+        var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(_ref, 1),
+          sourcePath = _ref2[0];
+        return sourcePath.split('/').pop() === lastSegment;
+      });
+      if (lastSegmentMatches.length === 1) return lastSegmentMatches[0][1];
+      return undefined;
+    };
+    return {
+      params: compiledParams.map(param => {
+        var sourceAddress = findSourceAddress(param.address);
+        return _objectSpread(_objectSpread({}, param), {}, {
+          sourceAddress,
+          sourceWritable: !!sourceAddress
+        });
+      }),
+      hiddenCount: Math.max(0, sourceParams.length - compiledParams.length),
+      fromCompiledJson: true
+    };
+  }
+  var _filterUsedParams = filterUsedParams(sourceParams, dspJson),
+    usedParams = _filterUsedParams.usedParams,
+    hiddenCount = _filterUsedParams.hiddenCount;
+  return {
+    params: usedParams.map(param => _objectSpread(_objectSpread({}, param), {}, {
+      sourceWritable: true
+    })),
+    hiddenCount,
+    fromCompiledJson: false
+  };
 }
 
 /**
@@ -2793,13 +3207,65 @@ class PropertyPanel {
  * which is what DSPMetadataEditor uses to locate the label in the source.
  */
 
+function maskComments(code) {
+  var masked = '';
+  var state = 'code';
+  var escaped = false;
+  for (var i = 0; i < code.length; i++) {
+    var ch = code[i];
+    var next = code[i + 1];
+    if (state === 'lineComment') {
+      if (ch === '\n') {
+        state = 'code';
+        masked += ch;
+      } else {
+        masked += ' ';
+      }
+      continue;
+    }
+    if (state === 'blockComment') {
+      if (ch === '*' && next === '/') {
+        masked += '  ';
+        i++;
+        state = 'code';
+      } else {
+        masked += ch === '\n' ? ch : ' ';
+      }
+      continue;
+    }
+    if (state === 'string') {
+      masked += ch;
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        state = 'code';
+      }
+      continue;
+    }
+    if (ch === '/' && next === '/') {
+      masked += '  ';
+      i++;
+      state = 'lineComment';
+    } else if (ch === '/' && next === '*') {
+      masked += '  ';
+      i++;
+      state = 'blockComment';
+    } else {
+      masked += ch;
+      if (ch === '"') state = 'string';
+    }
+  }
+  return masked;
+}
+
 /**
  * Extract all DSP UI parameters from Faust source code.
- * Strips comments first, then finds all hslider/vslider/button/etc. labels.
+ * Masks comments first, then finds all hslider/vslider/button/etc. labels.
  */
 function parseParams(code) {
-  // Strip comments
-  var stripped = code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  var stripped = maskComments(code);
   var results = [];
   var seen = new Set();
 
@@ -2839,4 +3305,4 @@ function parseParams(code) {
 /***/ }
 
 }]);
-//# sourceMappingURL=50fbf647859f2dbffda7.js.map
+//# sourceMappingURL=d7f433dca9805083a2b0.js.map
