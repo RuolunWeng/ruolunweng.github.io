@@ -7484,8 +7484,61 @@ const SHCUI_TYPES = [
   "trigCounter",
   "setRef"
 ];
+function maskComments(code) {
+  let masked = "";
+  let state = "code";
+  let escaped = false;
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
+    const next = code[i + 1];
+    if (state === "lineComment") {
+      if (ch === "\n") {
+        state = "code";
+        masked += ch;
+      } else {
+        masked += " ";
+      }
+      continue;
+    }
+    if (state === "blockComment") {
+      if (ch === "*" && next === "/") {
+        masked += "  ";
+        i++;
+        state = "code";
+      } else {
+        masked += ch === "\n" ? ch : " ";
+      }
+      continue;
+    }
+    if (state === "string") {
+      masked += ch;
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === '"') {
+        state = "code";
+      }
+      continue;
+    }
+    if (ch === "/" && next === "/") {
+      masked += "  ";
+      i++;
+      state = "lineComment";
+    } else if (ch === "/" && next === "*") {
+      masked += "  ";
+      i++;
+      state = "blockComment";
+    } else {
+      masked += ch;
+      if (ch === '"')
+        state = "string";
+    }
+  }
+  return masked;
+}
 function parseParams(code) {
-  const stripped = code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const stripped = maskComments(code);
   const results = [];
   const seen2 = /* @__PURE__ */ new Set();
   const widgetRegex = /(?:hslider|vslider|button|checkbox|nentry|hbargraph|vbargraph)\s*\(\s*"((?:[^"\\]|\\.)*)"/g;
@@ -7547,6 +7600,106 @@ function extractUsedParamsFromJson(dspJson) {
   }
   collectParams((parsedJson == null ? void 0 : parsedJson.ui) || []);
   return usedParams;
+}
+function paramsFromDspJson(dspJson) {
+  if (!dspJson)
+    return [];
+  let parsedJson = dspJson;
+  if (typeof dspJson === "string") {
+    try {
+      parsedJson = JSON.parse(dspJson);
+    } catch (e) {
+      console.error("[paramsFromDspJson] Failed to parse JSON:", e);
+      return [];
+    }
+  }
+  const params = [];
+  let fallbackId = 0;
+  function getMetaValue(meta, key) {
+    if (!meta)
+      return void 0;
+    for (const entry of meta) {
+      if (key in entry)
+        return entry[key];
+    }
+    return void 0;
+  }
+  function collectParams(items) {
+    for (const item of items || []) {
+      if (!item || typeof item !== "object")
+        continue;
+      if (item.items) {
+        collectParams(item.items);
+        continue;
+      }
+      const type = item.type;
+      const isControl = [
+        "hslider",
+        "vslider",
+        "nentry",
+        "button",
+        "checkbox",
+        "hbargraph",
+        "vbargraph"
+      ].includes(type);
+      if (isControl && item.address) {
+        params.push({
+          id: item.index ?? fallbackId,
+          address: item.address,
+          min: item.min ?? 0,
+          max: item.max ?? 1,
+          init: item.init ?? 0,
+          accMeta: getMetaValue(item.meta, "acc"),
+          gyrMeta: getMetaValue(item.meta, "gyr"),
+          motionMeta: getMetaValue(item.meta, "motion"),
+          showNameMeta: getMetaValue(item.meta, "showName")
+        });
+        fallbackId++;
+      }
+    }
+  }
+  collectParams((parsedJson == null ? void 0 : parsedJson.ui) || []);
+  return params;
+}
+function effectiveParams(sourceParams, dspJson) {
+  const compiledParams = paramsFromDspJson(dspJson);
+  if (compiledParams.length > 0) {
+    const sourceByPath = new Map(sourceParams.map((p) => [normalizeParamPath(p.address), p.address]));
+    const findSourceAddress = (address) => {
+      const normalized = normalizeParamPath(address);
+      const exact = sourceByPath.get(normalized);
+      if (exact)
+        return exact;
+      for (const [sourcePath, sourceAddress] of sourceByPath.entries()) {
+        if (normalized.endsWith(`/${sourcePath}`) || sourcePath.endsWith(`/${normalized}`)) {
+          return sourceAddress;
+        }
+      }
+      const lastSegment = normalized.split("/").pop();
+      const lastSegmentMatches = Array.from(sourceByPath.entries()).filter(([sourcePath]) => sourcePath.split("/").pop() === lastSegment);
+      if (lastSegmentMatches.length === 1)
+        return lastSegmentMatches[0][1];
+      return void 0;
+    };
+    return {
+      params: compiledParams.map((param) => {
+        const sourceAddress = findSourceAddress(param.address);
+        return {
+          ...param,
+          sourceAddress,
+          sourceWritable: !!sourceAddress
+        };
+      }),
+      hiddenCount: Math.max(0, sourceParams.length - compiledParams.length),
+      fromCompiledJson: true
+    };
+  }
+  const { usedParams, hiddenCount } = filterUsedParams(sourceParams, dspJson);
+  return {
+    params: usedParams.map((param) => ({ ...param, sourceWritable: true })),
+    hiddenCount,
+    fromCompiledJson: false
+  };
 }
 function filterUsedParams(declaredParams, dspJson) {
   if (!dspJson) {
@@ -7870,6 +8023,7 @@ class SHCUICanvas {
       return;
     }
     const existingParams = [];
+    const readonlyParams = /* @__PURE__ */ new Set();
     if (this.getCode) {
       const parsed = parseParams(this.getCode());
       const dspJson = this.getDspJson ? this.getDspJson() : null;
@@ -7880,10 +8034,13 @@ class SHCUICanvas {
         max: 1,
         init: 0
       }));
-      const { usedParams: filteredParams } = filterUsedParams(paramsWithMeta, dspJson);
-      for (const { address } of filteredParams) {
-        if (!existingParams.includes(address))
-          existingParams.push(address);
+      const { params: filteredParams } = effectiveParams(paramsWithMeta, dspJson);
+      for (const { address, sourceAddress, sourceWritable } of filteredParams) {
+        const writePath = sourceAddress || address;
+        if (!existingParams.includes(writePath))
+          existingParams.push(writePath);
+        if (sourceWritable === false)
+          readonlyParams.add(writePath);
       }
     }
     for (const el of this.elements) {
@@ -7921,7 +8078,7 @@ class SHCUICanvas {
       for (const p of existingParams) {
         const opt = document.createElement("option");
         opt.value = p;
-        opt.textContent = p;
+        opt.textContent = readonlyParams.has(p) ? `${p} (not editable)` : p;
         datalist.appendChild(opt);
       }
     }
@@ -7935,7 +8092,18 @@ class SHCUICanvas {
     pathInput.style.cssText = "width:100%;background:#3c3c3c;color:#ccc;border:1px solid #555;border-radius:3px;padding:3px 5px;font-size:11px;box-sizing:border-box;";
     const hint = document.createElement("div");
     hint.style.cssText = "font-size:10px;color:#555;";
-    hint.textContent = existingParams.length > 0 ? `${existingParams.length} param(s) found in DSP — or type a new name` : "No params found in DSP — type a new param name";
+    const updateParamHint = () => {
+      const selected = pathInput.value.trim();
+      if (readonlyParams.has(selected)) {
+        hint.style.color = "#fa4";
+        hint.textContent = "This parameter comes from imported/compiled UI and cannot be edited because its label is not in the current DSP file.";
+      } else {
+        hint.style.color = "#555";
+        hint.textContent = existingParams.length > 0 ? `${existingParams.length} param(s) found in DSP — or type a new name` : "No params found in DSP — type a new param name";
+      }
+    };
+    pathInput.addEventListener("input", updateParamHint);
+    updateParamHint();
     paramWrap.appendChild(pathInput);
     paramWrap.appendChild(hint);
     const paramRow = document.createElement("div");
@@ -7987,6 +8155,10 @@ class SHCUICanvas {
       const path = pathInput.value.trim();
       if (!path) {
         errMsg.textContent = "Param path is required";
+        return;
+      }
+      if (readonlyParams.has(path)) {
+        errMsg.textContent = "This imported/compiled UI parameter is not editable in the current DSP file.";
         return;
       }
       const tab = tabInput.value.trim() || "main";
@@ -8195,10 +8367,63 @@ class PropertyPanel {
   }
 }
 class SHCUIParser {
+  maskComments(dspCode) {
+    let masked = "";
+    let state = "code";
+    let escaped = false;
+    for (let i = 0; i < dspCode.length; i++) {
+      const ch = dspCode[i];
+      const next = dspCode[i + 1];
+      if (state === "lineComment") {
+        if (ch === "\n") {
+          state = "code";
+          masked += ch;
+        } else {
+          masked += " ";
+        }
+        continue;
+      }
+      if (state === "blockComment") {
+        if (ch === "*" && next === "/") {
+          masked += "  ";
+          i++;
+          state = "code";
+        } else {
+          masked += ch === "\n" ? ch : " ";
+        }
+        continue;
+      }
+      if (state === "string") {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === "\\") {
+          escaped = true;
+        } else if (ch === '"') {
+          state = "code";
+        }
+        continue;
+      }
+      if (ch === "/" && next === "/") {
+        masked += "  ";
+        i++;
+        state = "lineComment";
+      } else if (ch === "/" && next === "*") {
+        masked += "  ";
+        i++;
+        state = "blockComment";
+      } else {
+        masked += ch;
+        if (ch === '"')
+          state = "string";
+      }
+    }
+    return masked;
+  }
   parse(dspCode) {
     const elements = [];
     const errors = [];
-    const stripped = dspCode.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    const stripped = this.maskComments(dspCode);
     const regex2 = /"([^"]*\[SHCUI:[^\]]*\][^"]*)"/g;
     let match2;
     while ((match2 = regex2.exec(stripped)) !== null) {
@@ -8235,7 +8460,7 @@ class SHCUIParser {
   }
   parseCueManager(dspCode) {
     const entries = [];
-    const stripped = dspCode.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    const stripped = this.maskComments(dspCode);
     const inlineMatch = stripped.match(/\[touchCueManager:\s*(\{[^}]*\})\]/);
     const declareMatch = stripped.match(/declare\s+touchCueManager\s+"(\{[^}]*\})"\s*;/);
     const rawContent = ((inlineMatch == null ? void 0 : inlineMatch[1]) || (declareMatch == null ? void 0 : declareMatch[1]) || "").replace(/^\{/, "").replace(/\}$/, "");
@@ -8258,10 +8483,63 @@ class SHCUIParser {
   }
 }
 class MotionParser {
+  maskComments(dspCode) {
+    let masked = "";
+    let state = "code";
+    let escaped = false;
+    for (let i = 0; i < dspCode.length; i++) {
+      const ch = dspCode[i];
+      const next = dspCode[i + 1];
+      if (state === "lineComment") {
+        if (ch === "\n") {
+          state = "code";
+          masked += ch;
+        } else {
+          masked += " ";
+        }
+        continue;
+      }
+      if (state === "blockComment") {
+        if (ch === "*" && next === "/") {
+          masked += "  ";
+          i++;
+          state = "code";
+        } else {
+          masked += ch === "\n" ? ch : " ";
+        }
+        continue;
+      }
+      if (state === "string") {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === "\\") {
+          escaped = true;
+        } else if (ch === '"') {
+          state = "code";
+        }
+        continue;
+      }
+      if (ch === "/" && next === "/") {
+        masked += "  ";
+        i++;
+        state = "lineComment";
+      } else if (ch === "/" && next === "*") {
+        masked += "  ";
+        i++;
+        state = "blockComment";
+      } else {
+        masked += ch;
+        if (ch === '"')
+          state = "string";
+      }
+    }
+    return masked;
+  }
   parse(dspCode) {
     const mappings = [];
     const errors = [];
-    const stripped = dspCode.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    const stripped = this.maskComments(dspCode);
     const regex2 = /"([^"]*\[(?:acc|gyr):[^\]]*\][^"]*)"/g;
     let match2;
     while ((match2 = regex2.exec(stripped)) !== null) {
@@ -8304,13 +8582,70 @@ class DSPMetadataEditor {
     this.shcuiParser = new SHCUIParser();
     this.motionParser = new MotionParser();
   }
+  maskComments(dspCode) {
+    let masked = "";
+    let state = "code";
+    let escaped = false;
+    for (let i = 0; i < dspCode.length; i++) {
+      const ch = dspCode[i];
+      const next = dspCode[i + 1];
+      if (state === "lineComment") {
+        if (ch === "\n") {
+          state = "code";
+          masked += ch;
+        } else {
+          masked += " ";
+        }
+        continue;
+      }
+      if (state === "blockComment") {
+        if (ch === "*" && next === "/") {
+          masked += "  ";
+          i++;
+          state = "code";
+        } else {
+          masked += ch === "\n" ? ch : " ";
+        }
+        continue;
+      }
+      if (state === "string") {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === "\\") {
+          escaped = true;
+        } else if (ch === '"') {
+          state = "code";
+        }
+        continue;
+      }
+      if (ch === "/" && next === "/") {
+        masked += "  ";
+        i++;
+        state = "lineComment";
+      } else if (ch === "/" && next === "*") {
+        masked += "  ";
+        i++;
+        state = "blockComment";
+      } else {
+        masked += ch;
+        if (ch === '"')
+          state = "string";
+      }
+    }
+    return masked;
+  }
   findLabelIndex(dspCode, paramPath) {
     const escaped = paramPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex2 = new RegExp(`"(${escaped}[^"]*)"`, "g");
-    const match2 = regex2.exec(dspCode);
+    const match2 = regex2.exec(this.maskComments(dspCode));
     if (!match2)
       return null;
-    return { start: match2.index + 1, end: match2.index + match2[0].length - 1, label: match2[1] };
+    return {
+      start: match2.index + 1,
+      end: match2.index + match2[0].length - 1,
+      label: dspCode.slice(match2.index + 1, match2.index + match2[0].length - 1)
+    };
   }
   upsertMeta(label, tagName, newValue) {
     const tagRegex = new RegExp(`\\[${tagName}:[^\\]]*\\]`, "g");
@@ -8364,12 +8699,12 @@ class DSPMetadataEditor {
     const content = cueEntries.map((e) => `${e.index}:'${e.tip}'`).join("; ");
     const newMeta = `[touchCueManager: {${content}}]`;
     const trigCueLabelRegex = /"([^"]*\[SHCUI:[^\]]*trigCue[^\]]*\][^"]*)"/;
-    const match2 = dspCode.match(trigCueLabelRegex);
+    const match2 = trigCueLabelRegex.exec(this.maskComments(dspCode));
     if (match2) {
-      const oldLabel = match2[1];
+      const oldLabel = dspCode.slice(match2.index + 1, match2.index + match2[0].length - 1);
       const cleanLabel = oldLabel.replace(/\s*\[touchCueManager:[^\]]*\]/g, "").trimEnd();
       const newLabel = cleanLabel + " " + newMeta;
-      return dspCode.replace(match2[0], `"${newLabel}"`);
+      return dspCode.slice(0, match2.index) + `"${newLabel}"` + dspCode.slice(match2.index + match2[0].length);
     }
     const declContent = cueEntries.map((e) => `${e.index}:${e.tip}`).join("; ");
     const newDecl = `declare touchCueManager "{${declContent}}";`;
@@ -8512,7 +8847,7 @@ class MotionPanel {
     const code = this.getCode();
     const parsed = this.motionParser.parse(code);
     const dspJson = this.getDspJson ? this.getDspJson() : null;
-    const { usedParams: filteredParams, hiddenCount } = filterUsedParams(this.params, dspJson);
+    const { params: filteredParams, hiddenCount } = effectiveParams(this.params, dspJson);
     const titleA = document.createElement("div");
     titleA.textContent = "Motion Lib Parameter Link [motion: ...]";
     titleA.style.cssText = "padding:8px 10px 4px;font-weight:bold;color:#4af;font-size:12px;border-bottom:1px solid #333;";
@@ -8554,14 +8889,41 @@ class MotionPanel {
       this.container.appendChild(empty);
     } else {
       for (const param of filteredParams) {
-        const existing = parsed.data.filter((m) => m.paramPath === param.address);
+        const writePath = param.sourceAddress || param.address;
+        const existing = parsed.data.filter((m) => m.paramPath === writePath);
+        for (const mapping of this.mappingsFromParamMeta(param)) {
+          if (!existing.some((m) => m.sensor === mapping.sensor))
+            existing.push(mapping);
+        }
         this.container.appendChild(this.makeAccGyrRow(param, existing));
       }
     }
   }
+  mappingsFromParamMeta(param) {
+    const mappings = [];
+    for (const [sensor, meta] of [["acc", param.accMeta], ["gyr", param.gyrMeta]]) {
+      if (!meta)
+        continue;
+      const parts = meta.trim().split(/\s+/);
+      if (parts.length < 5)
+        continue;
+      const [axisStr, curveStr, aminStr, amidStr, amaxStr] = parts;
+      const axis = parseInt(axisStr);
+      const curve = parseInt(curveStr);
+      const amin = parseFloat(aminStr);
+      const amid = parseFloat(amidStr);
+      const amax = parseFloat(amaxStr);
+      if (![0, 1, 2].includes(axis) || ![0, 1, 2].includes(curve) || !Number.isFinite(amin) || !Number.isFinite(amid) || !Number.isFinite(amax))
+        continue;
+      const writePath = param.sourceAddress || param.address;
+      mappings.push({ paramPath: writePath, sensor, axis, curve, amin, amid, amax });
+    }
+    return mappings;
+  }
   makeMotionLinkRow(param) {
     const row = document.createElement("div");
     row.style.cssText = "padding:5px 10px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:6px;";
+    const writable = param.sourceWritable !== false;
     const label = document.createElement("span");
     label.textContent = param.address.split("/").pop() || param.address;
     label.title = param.address;
@@ -8569,6 +8931,7 @@ class MotionPanel {
     row.appendChild(label);
     const sel = document.createElement("select");
     sel.style.cssText = "flex:1;background:#3c3c3c;color:#ccc;border:1px solid #555;border-radius:3px;padding:2px 4px;font-size:11px;";
+    sel.disabled = !writable;
     const noneOpt = document.createElement("option");
     noneOpt.value = "";
     noneOpt.textContent = "— none —";
@@ -8590,15 +8953,18 @@ class MotionPanel {
     }
     const preview = document.createElement("span");
     const updatePreview = () => {
-      preview.textContent = sel.value ? `[motion: ${sel.value}]` : "";
+      preview.textContent = writable ? sel.value ? `[motion: ${sel.value}]` : "" : "from import/compiled UI - not editable";
     };
-    preview.style.cssText = "font-family:monospace;font-size:10px;color:#666;flex-shrink:0;";
+    preview.style.cssText = `font-family:monospace;font-size:10px;color:${writable ? "#666" : "#fa4"};flex-shrink:0;`;
     updatePreview();
     sel.addEventListener("change", () => {
+      if (!writable)
+        return;
       updatePreview();
       const val = sel.value;
       const code = this.getCode();
-      const updated = val ? this.editor.upsertMotionLink(code, param.address, val) : this.editor.removeMotionLink(code, param.address);
+      const writePath = param.sourceAddress || param.address;
+      const updated = val ? this.editor.upsertMotionLink(code, writePath, val) : this.editor.removeMotionLink(code, writePath);
       if (updated !== code)
         this.setCode(updated);
     });
@@ -8609,6 +8975,7 @@ class MotionPanel {
   makeAccGyrRow(param, existing) {
     const wrap = document.createElement("div");
     wrap.style.cssText = "padding:6px 10px;border-bottom:1px solid #2a2a2a;";
+    const writable = param.sourceWritable !== false;
     const header = document.createElement("div");
     header.style.cssText = "display:flex;align-items:center;gap:6px;margin-bottom:4px;";
     const label = document.createElement("span");
@@ -8623,7 +8990,14 @@ class MotionPanel {
     wrap.appendChild(header);
     for (const m of existing)
       wrap.appendChild(this.makeMappingDisplay(param, m));
-    wrap.appendChild(this.makeAddMappingForm(param));
+    if (writable) {
+      wrap.appendChild(this.makeAddMappingForm(param));
+    } else {
+      const note = document.createElement("div");
+      note.textContent = "This parameter comes from imported/compiled UI and cannot be edited because its label is not in the current DSP file.";
+      note.style.cssText = "color:#fa4;font-size:10px;line-height:1.4;margin-top:3px;";
+      wrap.appendChild(note);
+    }
     return wrap;
   }
   makeMappingDisplay(param, m) {
@@ -8636,9 +9010,18 @@ class MotionPanel {
     const delBtn = document.createElement("button");
     delBtn.textContent = "✕";
     delBtn.style.cssText = "background:#5a2020;color:#fff;border:none;border-radius:2px;padding:1px 5px;cursor:pointer;font-size:10px;";
+    delBtn.disabled = param.sourceWritable === false;
+    if (delBtn.disabled) {
+      delBtn.title = "Cannot edit metadata for imported/compiled UI parameters";
+      delBtn.style.opacity = "0.45";
+      delBtn.style.cursor = "not-allowed";
+    }
     delBtn.addEventListener("click", () => {
+      if (param.sourceWritable === false)
+        return;
       const code = this.getCode();
-      const updated = this.editor.removeMotion(code, param.address, m.sensor);
+      const writePath = param.sourceAddress || param.address;
+      const updated = this.editor.removeMotion(code, writePath, m.sensor);
       if (updated !== code) {
         this.setCode(updated);
         this.render();
@@ -8687,7 +9070,7 @@ class MotionPanel {
         return;
       }
       const mapping = {
-        paramPath: param.address,
+        paramPath: param.sourceAddress || param.address,
         sensor: sensorSel.value,
         axis: parseInt(axisSel.value),
         curve: parseInt(curveSel.value),
@@ -8696,7 +9079,8 @@ class MotionPanel {
         amax
       };
       const code = this.getCode();
-      const updated = this.editor.upsertMotion(code, param.address, mapping);
+      const writePath = param.sourceAddress || param.address;
+      const updated = this.editor.upsertMotion(code, writePath, mapping);
       if (updated !== code) {
         this.setCode(updated);
         this.render();
@@ -8987,7 +9371,7 @@ class ShowNamePanel {
     help.textContent = 'Parameters with a showName will appear in the SHCdyna Setting page "DSP Parameters" list, allowing performers to adjust values at runtime.';
     this.container.appendChild(help);
     const dspJson = this.getDspJson ? this.getDspJson() : null;
-    const { usedParams: filteredParams, hiddenCount } = filterUsedParams(this.params, dspJson);
+    const { params: filteredParams, hiddenCount } = effectiveParams(this.params, dspJson);
     if (!dspJson && this.params.length > 0) {
       const guidance = document.createElement("div");
       guidance.style.cssText = "padding:8px 10px;background:#2a2a1a;border-bottom:1px solid #3a3a2a;color:#fa4;font-size:11px;line-height:1.5;";
@@ -9030,14 +9414,23 @@ class ShowNamePanel {
   makeParamRow(param) {
     const row = document.createElement("div");
     row.style.cssText = "display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid #2a2a2a;";
+    const writable = param.sourceWritable !== false;
+    const writePath = param.sourceAddress || param.address;
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = !!param.showNameMeta;
     checkbox.style.cssText = "cursor:pointer;";
+    checkbox.disabled = !writable;
+    if (!writable) {
+      checkbox.title = "Cannot edit metadata for imported/compiled UI parameters";
+      checkbox.style.cursor = "not-allowed";
+    }
     checkbox.addEventListener("change", () => {
+      if (!writable)
+        return;
       if (!checkbox.checked) {
         const code = this.getCode();
-        const updated = this.editor.removeShowName(code, param.address);
+        const updated = this.editor.removeShowName(code, writePath);
         if (updated !== code) {
           this.setCode(updated);
           param.showNameMeta = void 0;
@@ -9046,7 +9439,7 @@ class ShowNamePanel {
       } else {
         const defaultName = param.address.split("/").pop() || param.address;
         const code = this.getCode();
-        const updated = this.editor.upsertShowName(code, param.address, defaultName);
+        const updated = this.editor.upsertShowName(code, writePath, defaultName);
         if (updated !== code) {
           this.setCode(updated);
           param.showNameMeta = defaultName;
@@ -9061,6 +9454,13 @@ class ShowNamePanel {
     label.title = `Full path: ${param.address}`;
     label.style.cssText = "color:#aaa;font-size:11px;min-width:100px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
     row.appendChild(label);
+    if (!writable) {
+      const warning = document.createElement("span");
+      warning.textContent = "from import/compiled UI - not editable";
+      warning.style.cssText = "color:#fa4;font-size:10px;flex:1;";
+      row.appendChild(warning);
+      return row;
+    }
     if (param.showNameMeta) {
       const arrow = document.createElement("span");
       arrow.textContent = "→";
@@ -9081,7 +9481,7 @@ class ShowNamePanel {
           return;
         }
         const code = this.getCode();
-        const updated = this.editor.upsertShowName(code, param.address, val);
+        const updated = this.editor.upsertShowName(code, writePath, val);
         if (updated !== code) {
           this.setCode(updated);
           param.showNameMeta = val;
@@ -9208,7 +9608,7 @@ class HelpPanel {
 }
 class FaustPiecePackager {
   async unpack(data, fileName) {
-    const JSZip = (await __vitePreload(() => import("./jszip.min-9f6be5f5.js").then((n) => n.j), true ? [] : void 0)).default;
+    const JSZip = (await __vitePreload(() => import("./jszip.min-c9529a51.js").then((n) => n.j), true ? [] : void 0)).default;
     const zip = await JSZip.loadAsync(data);
     const baseName = fileName.replace(/\.FaustPiece$/i, "");
     const mainDspName = `${baseName}.dsp`;
@@ -9224,7 +9624,7 @@ class FaustPiecePackager {
     return { mainDspPath: mainDspName, mainDspContent, attachments, tempDir: "" };
   }
   async pack(options, attachmentContents = /* @__PURE__ */ new Map()) {
-    const JSZip = (await __vitePreload(() => import("./jszip.min-9f6be5f5.js").then((n) => n.j), true ? [] : void 0)).default;
+    const JSZip = (await __vitePreload(() => import("./jszip.min-c9529a51.js").then((n) => n.j), true ? [] : void 0)).default;
     const zip = new JSZip();
     const mainDspName = `${options.outputName}.dsp`;
     zip.file(mainDspName, options.dspContent);
@@ -9520,7 +9920,7 @@ class EditorPanel {
       this.pieceName = file.name.replace(/\.FaustPiece$/i, "");
       this.dspCode = result.mainDspContent;
       this.attachments.clear();
-      const JSZip = (await __vitePreload(() => import("./jszip.min-9f6be5f5.js").then((n) => n.j), true ? [] : void 0)).default;
+      const JSZip = (await __vitePreload(() => import("./jszip.min-c9529a51.js").then((n) => n.j), true ? [] : void 0)).default;
       const zip = await JSZip.loadAsync(buf);
       for (const [zipName, zipEntry] of Object.entries(zip.files)) {
         if (!zipEntry.dir && zipName !== `${this.pieceName}.dsp`) {
@@ -9829,6 +10229,59 @@ class NewPiecePanel {
     this.opts = opts;
     this.build();
   }
+  maskComments(code) {
+    let masked = "";
+    let state = "code";
+    let escaped = false;
+    for (let i = 0; i < code.length; i++) {
+      const ch = code[i];
+      const next = code[i + 1];
+      if (state === "lineComment") {
+        if (ch === "\n") {
+          state = "code";
+          masked += ch;
+        } else {
+          masked += " ";
+        }
+        continue;
+      }
+      if (state === "blockComment") {
+        if (ch === "*" && next === "/") {
+          masked += "  ";
+          i++;
+          state = "code";
+        } else {
+          masked += ch === "\n" ? ch : " ";
+        }
+        continue;
+      }
+      if (state === "string") {
+        masked += ch;
+        if (escaped) {
+          escaped = false;
+        } else if (ch === "\\") {
+          escaped = true;
+        } else if (ch === '"') {
+          state = "code";
+        }
+        continue;
+      }
+      if (ch === "/" && next === "/") {
+        masked += "  ";
+        i++;
+        state = "lineComment";
+      } else if (ch === "/" && next === "*") {
+        masked += "  ";
+        i++;
+        state = "blockComment";
+      } else {
+        masked += ch;
+        if (ch === '"')
+          state = "string";
+      }
+    }
+    return masked;
+  }
   /**
    * Merge metadata from oldCode into newCode.
    * Extracts all metadata tags (SHCUI, acc, gyr, showName, motion) from oldCode
@@ -9843,8 +10296,9 @@ class NewPiecePanel {
     const extractMetadata = (code) => {
       const paramMetadata = /* @__PURE__ */ new Map();
       const labelRegex = /"([^"]+)"/g;
+      const maskedCode = this.maskComments(code);
       let match2;
-      while ((match2 = labelRegex.exec(code)) !== null) {
+      while ((match2 = labelRegex.exec(maskedCode)) !== null) {
         const fullLabel = match2[1];
         const metaStart = fullLabel.search(/\[(?:SHCUI|acc|gyr|motion|showName|style|unit|hidden|tooltip|scale|integer|log|lin|knob|led|numerical|menu|radio|type|osc|midi|screencolor)(?:\s|:)[^\]]*\]/);
         const paramPath = metaStart !== -1 ? fullLabel.slice(0, metaStart).trimEnd() : fullLabel;
@@ -9887,8 +10341,8 @@ class NewPiecePanel {
       const escaped = paramPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const newLabelRegex = new RegExp(`"(${escaped}(?:\\s*\\[[^\\]]*\\])*)"`, "g");
       let newMatch;
-      while ((newMatch = newLabelRegex.exec(result)) !== null) {
-        const oldLabel = newMatch[1];
+      while ((newMatch = newLabelRegex.exec(this.maskComments(result))) !== null) {
+        const oldLabel = result.slice(newMatch.index + 1, newMatch.index + newMatch[0].length - 1);
         const cleanLabel = oldLabel.replace(/\s*\[(?:SHCUI|acc|gyr|motion|showName|style|unit|hidden|tooltip|scale|integer|log|lin|knob|led|numerical|menu|radio|type|osc|midi|screencolor)(?:\s|:)[^\]]*\]/g, "").trim();
         const metaTags = [];
         for (const [key, value] of metaMap.entries()) {
@@ -10283,6 +10737,7 @@ class NewPiecePanel {
     const canvas2 = new SHCUICanvas({
       container: canvasWrap,
       getCode: () => this.dspCode,
+      getDspJson: this.opts.getDspJson,
       onChange: (el, x, y, w, h) => {
         setCode(this.editor.upsertSHCUI(this.dspCode, el.paramPath, el));
         propPanel == null ? void 0 : propPanel.updatePosition(x, y, w, h);
@@ -10437,9 +10892,9 @@ class NewPiecePanel {
     const showNameWrap = document.createElement("div");
     showNameWrap.style.cssText = "flex:1;overflow:hidden;";
     showNamePane.appendChild(showNameWrap);
-    motionPanel = new MotionPanel({ container: motionWrap, getCode, setCode });
+    motionPanel = new MotionPanel({ container: motionWrap, getCode, setCode, getDspJson: this.opts.getDspJson });
     cuePanel = new CuePanel({ container: cueWrap, getCode, setCode });
-    showNamePanel = new ShowNamePanel({ container: showNameWrap, getCode, setCode });
+    showNamePanel = new ShowNamePanel({ container: showNameWrap, getCode, setCode, getDspJson: this.opts.getDspJson });
     motionPanel.parseParamsFromCode(this.dspCode);
     this.appendNavButtons(() => this.showStep(2), () => this.showStep(4), "Next →");
   }
@@ -10738,7 +11193,8 @@ class FaustPiecePanel {
       getDspFileList,
       getDspFileContent,
       pushToEditor,
-      downloadFile
+      downloadFile,
+      getDspJson
     });
   }
   // ── Public API ────────────────────────────────────────────────────────────
@@ -11623,7 +12079,7 @@ class Resources {
 let faustWasmEnv;
 async function init() {
   console.log("FaustPlayground: version 1.5.0 (2026-01-13)");
-  const faustwasm = await __vitePreload(() => import("./index-9d1390f2.js"), true ? [] : void 0);
+  const faustwasm = await __vitePreload(() => import("./index-a48e3ca4.js"), true ? [] : void 0);
   console.log(faustwasm);
   const { instantiateFaustModuleFromFile, FaustCompiler, LibFaust, FaustMonoDspGenerator, FaustPolyDspGenerator, ab2str, str2ab } = faustwasm;
   const faustModule = await instantiateFaustModuleFromFile(jsURL, dataURL, wasmURL);
